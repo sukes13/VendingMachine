@@ -1,6 +1,8 @@
 package com.sukes13.codekata
 
 import com.sukes13.codekata.CoinRegistry.valueOf
+import com.sukes13.codekata.VendingEvent.AmountInsertedEvent
+import com.sukes13.codekata.VendingEvent.CoinRejectedEvent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -15,7 +17,7 @@ class VendingMachineTest {
     fun `When inserting a valid coin, value is amounted in machine`(coin: Coin, amount: Double) {
         val actual = VendingMachine().insert(coin)
 
-        assertThat(actual.amount).isEqualTo(amount)
+        assertThat(actual.amount()).isEqualTo(amount)
     }
 
     companion object {
@@ -38,20 +40,34 @@ class VendingMachineTest {
         val invalidCoin = COIN_ONE_CENT.copy(diameter = 2.00)
         val actual = VendingMachine().insert(invalidCoin)
 
-        assertThat(actual.amount).isEqualTo(0.0)
-        assertThat(actual.coinChute).containsExactly(invalidCoin)
+        assertThat(actual.amount()).isEqualTo(0.0)
+        assertThat(actual.coinChute()).containsExactly(invalidCoin)
     }
 }
 
 data class VendingMachine(
-    val amount: Double = 0.0,
-    val coinChute: List<Coin> = emptyList()
+    val eventStore: EventStore = EventStore()
 ) {
-    fun insert(coin: Coin) =
-        coin.valueOf()
-            ?.let { copy(amount = amount + it) }
-            ?: copy(coinChute = coinChute + coin)
+    fun amount() =  eventStore.events.filterIsInstance<AmountInsertedEvent>().sumOf { it.amount }
+    fun coinChute() = eventStore.events.filterIsInstance<CoinRejectedEvent>().map { it.coin }
 
+    fun insert(coin: Coin) : VendingMachine {
+         coin.valueOf()
+            ?.let { eventStore.append(AmountInsertedEvent(it)) }
+            ?: eventStore.append(CoinRejectedEvent(coin))
+        return this
+    }
+}
+
+class EventStore {
+    val events = mutableListOf<VendingEvent>()
+
+    fun append(event: VendingEvent) = events.add(event)
+}
+
+interface VendingEvent {
+    class AmountInsertedEvent(val amount: Double) : VendingEvent
+    class CoinRejectedEvent(val coin: Coin) : VendingEvent
 }
 
 val COIN_ONE_CENT = Coin(16.25, 1.67, 2.30)
