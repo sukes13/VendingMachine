@@ -48,26 +48,13 @@ class VendingMachineTest {
 data class VendingMachine(
     val eventStore: EventStore = EventStore()
 ) {
-    fun amount() =  eventStore.events.filterIsInstance<AmountInsertedEvent>().sumOf { it.amount }
-    fun coinChute() = eventStore.events.filterIsInstance<CoinRejectedEvent>().map { it.coin }
+    fun amount() = eventStore.filterEvents<AmountInsertedEvent>().sumOf { it.amount }
+    fun coinChute() = eventStore.filterEvents<CoinRejectedEvent>().map { it.coin }
 
-    fun insert(coin: Coin) : VendingMachine {
-         coin.valueOf()
-            ?.let { eventStore.append(AmountInsertedEvent(it)) }
-            ?: eventStore.append(CoinRejectedEvent(coin))
-        return this
-    }
-}
-
-class EventStore {
-    val events = mutableListOf<VendingEvent>()
-
-    fun append(event: VendingEvent) = events.add(event)
-}
-
-interface VendingEvent {
-    class AmountInsertedEvent(val amount: Double) : VendingEvent
-    class CoinRejectedEvent(val coin: Coin) : VendingEvent
+    fun insert(coin: Coin) =
+        coin.valueOf()
+            ?.let { VendingMachine(eventStore.append(AmountInsertedEvent(it))) }
+            ?: VendingMachine(eventStore.append(CoinRejectedEvent(coin)))
 }
 
 val COIN_ONE_CENT = Coin(16.25, 1.67, 2.30)
@@ -101,3 +88,13 @@ data class Coin(
 )
 
 
+interface VendingEvent {
+    class AmountInsertedEvent(val amount: Double) : VendingEvent
+    class CoinRejectedEvent(val coin: Coin) : VendingEvent
+}
+
+data class EventStore(val events: List<VendingEvent> = emptyList()) : List<VendingEvent> by events {
+    fun append(event: VendingEvent) = copy(events = events + event)
+
+    inline fun <reified T : VendingEvent> filterEvents() = events.filterIsInstance<T>()
+}
