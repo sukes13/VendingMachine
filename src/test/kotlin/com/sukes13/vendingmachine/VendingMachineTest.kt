@@ -1,5 +1,6 @@
 package com.sukes13.vendingmachine
 
+import com.sukes13.vendingmachine.Product.COLA
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -40,4 +41,13 @@ class VendingMachineTest {
         assertThat(actual.coinChute).containsExactly(invalidCoin)
         assertThat(actual.display).isEqualTo("INSERT COIN")
     }
+
+    @Test
+    fun `When one euro inserted and cola button pressed, cola is in chute and display shows thank you`() {
+        val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
+
+        assertThat(actual.chute).containsExactly(COLA)
+        assertThat(actual.display).isEqualTo("THANK YOU")
+    }
+
 }
