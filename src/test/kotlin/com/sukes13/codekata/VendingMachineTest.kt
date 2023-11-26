@@ -17,7 +17,7 @@ class VendingMachineTest {
     fun `When inserting a valid coin, value is amounted in machine`(coin: Coin, amount: Double) {
         val actual = VendingMachine().insert(coin)
 
-        assertThat(actual.amount()).isEqualTo(amount)
+        assertThat(actual.display).isEqualTo(amount.toString())
     }
 
     companion object {
@@ -40,16 +40,20 @@ class VendingMachineTest {
         val invalidCoin = COIN_ONE_CENT.copy(diameter = 2.00)
         val actual = VendingMachine().insert(invalidCoin)
 
-        assertThat(actual.amount()).isEqualTo(0.0)
-        assertThat(actual.coinChute()).containsExactly(invalidCoin)
+        assertThat(actual.coinChute).containsExactly(invalidCoin)
+        assertThat(actual.display).isEqualTo("INSERT COIN")
     }
 }
 
 data class VendingMachine(
     val eventStore: EventStore = EventStore()
 ) {
-    fun amount() = eventStore.filterEvents<AmountInsertedEvent>().sumOf { it.amount }
-    fun coinChute() = eventStore.filterEvents<CoinRejectedEvent>().map { it.coin }
+    private val amount = eventStore.filterEvents<AmountInsertedEvent>().sumOf { it.amount }
+    val coinChute = eventStore.filterEvents<CoinRejectedEvent>().map { it.coin }
+    val display = when(amount){
+        0.0 -> "INSERT COIN"
+        else -> amount.toString()
+    }
 
     fun insert(coin: Coin) =
         coin.valueOf()
@@ -98,3 +102,5 @@ data class EventStore(val events: List<VendingEvent> = emptyList()) : List<Vendi
 
     inline fun <reified T : VendingEvent> filterEvents() = events.filterIsInstance<T>()
 }
+
+private fun Double.toString() = String.format("%.2f", this)
