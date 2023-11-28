@@ -10,5 +10,6 @@ interface VendingEvent {
 data class EventStore(val events: List<VendingEvent> = emptyList()) : List<VendingEvent> by events {
     fun append(event: VendingEvent) = copy(events = events + event)
 
-    inline fun <reified T : VendingEvent> filterEvents() = events.filterIsInstance<T>()
+    inline fun <reified T : VendingEvent> eventsOfType() = events.filterIsInstance<T>()
+
 }

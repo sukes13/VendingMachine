@@ -43,11 +43,21 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When one euro inserted and cola button pressed, cola is in chute and display shows thank you`() {
+    fun `When one euro inserted and cola button pressed, cola is in chute, price deducted from amount and display shows thank you`() {
         val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
 
         assertThat(actual.chute).containsExactly(COLA)
+        assertThat(actual.currentAmount).isEqualTo(0.0)
         assertThat(actual.display).isEqualTo("THANK YOU")
+    }
+
+    @Test
+    fun `When cola button pressed, cola is in chute, display shows price`() {
+        val actual = VendingMachine().pressButton("Cola")
+
+        assertThat(actual.chute).isEmpty()
+        assertThat(actual.currentAmount).isEqualTo(0.0)
+        assertThat(actual.display).isEqualTo("1,00")
     }
 
 }

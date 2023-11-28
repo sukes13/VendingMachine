@@ -16,5 +16,5 @@ object ProductRegistry {
         COLA to 1.0,
     )
 
-    fun Product.value() = registry[this]
+    fun Product.price() = registry[this] ?: error("No price added for $name")
 }
