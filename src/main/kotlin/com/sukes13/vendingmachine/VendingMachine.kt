@@ -34,13 +34,13 @@ data class VendingMachine(
     fun display() =
         eventStore.events.lastOrNull().let { lastEvent ->
             if (lastEvent is TimedVendingEvent && lastEvent.occurredOn.withinSpecialTimeFrame())
-                lastEvent.specialMessage()
+                specialMessage(lastEvent)
             else defaultDisplayed()
         }
 
-    private fun TimedVendingEvent.specialMessage() =
-        when (this) {
-            is ButtonPressed -> "PRICE ${product.price().asString()}"
+    private fun specialMessage(event: TimedVendingEvent) =
+        when (event) {
+            is ButtonPressed -> "PRICE ${event.product.price().asString()}"
             is ProductBoughtEvent -> "THANK YOU"
         }
 
