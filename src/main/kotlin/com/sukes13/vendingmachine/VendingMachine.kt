@@ -3,6 +3,9 @@ package com.sukes13.vendingmachine
 import com.sukes13.vendingmachine.CoinRegistry.value
 import com.sukes13.vendingmachine.ProductRegistry.price
 import com.sukes13.vendingmachine.VendingEvent.*
+import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.*
+import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 
 data class VendingMachine(
@@ -15,9 +18,10 @@ data class VendingMachine(
         .map { it.product }
     val coinChute = eventStore.eventsOfType<CoinRejectedEvent>()
         .map { it.coin }
-    val display =
+
+    fun display() =
         when (val lastEvent = eventStore.events.lastOrNull()) {
-            is ProductBoughtEvent -> "THANK YOU"
+            is ProductBoughtEvent -> if (showingTimePassed(lastEvent.boughtOn)) "INSERT COIN" else "THANK YOU" 
             is ButtonPressed -> lastEvent.product.price().asString()
             else -> when (currentAmount) {
                 0.0 -> "INSERT COIN"
@@ -39,6 +43,9 @@ data class VendingMachine(
     }
 
     private fun copyAndAdd(event: VendingEvent) = VendingMachine(eventStore.append(event))
+
+    private fun showingTimePassed(time: LocalDateTime) =
+        time.isBefore(now().minusSeconds(3))
 }
 
 

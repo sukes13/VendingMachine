@@ -1,10 +1,18 @@
 package com.sukes13.vendingmachine
 
-interface VendingEvent {
+import java.time.LocalDateTime
+import java.time.LocalDateTime.now
+
+sealed interface VendingEvent {
     class AmountInsertedEvent(val amount: Double) : VendingEvent
     class CoinRejectedEvent(val coin: Coin) : VendingEvent
-    class ProductBoughtEvent(val product: Product) : VendingEvent
-    class ButtonPressed(val product: Product) : VendingEvent
+
+    sealed class TimedVendingEvent : VendingEvent {
+        val boughtOn: LocalDateTime = now()
+
+        class ProductBoughtEvent(val product: Product) : TimedVendingEvent()
+        class ButtonPressed(val product: Product) : TimedVendingEvent()
+    }
 }
 
 data class EventStore(val events: List<VendingEvent> = emptyList()) : List<VendingEvent> by events {
