@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
 sealed interface VendingEvent {
-    class ValueInsertedEvent(val amount: Double) : VendingEvent
+    class CoinAcceptedEvent(val amount: Double) : VendingEvent
     class CoinReturnedEvent(val coin: Coin) : VendingEvent
 
     sealed class TimedVendingEvent : VendingEvent {
