@@ -5,7 +5,7 @@ import java.time.LocalDateTime.now
 
 sealed interface VendingEvent {
     class AmountInsertedEvent(val amount: Double) : VendingEvent
-    class CoinRejectedEvent(val coin: Coin) : VendingEvent
+    class CoinReturnedEvent(val coin: Coin) : VendingEvent
 
     sealed class TimedVendingEvent : VendingEvent {
         val occurredOn: LocalDateTime = now()
