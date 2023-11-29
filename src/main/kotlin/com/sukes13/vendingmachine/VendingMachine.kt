@@ -33,7 +33,7 @@ data class VendingMachine(
 
     fun display() =
         eventStore.lastEventOrNull().let { event ->
-            if (event is TimedVendingEvent && event.occurredOn.withinSpecialTimeFrame())
+            if (event is TimedVendingEvent && event.occurredOn.withinTimeFrame())
                 temporaryMessage(event)
             else defaultMessage()
         }
@@ -53,7 +53,7 @@ data class VendingMachine(
 
     private fun copyAndAdd(event: VendingEvent) = VendingMachine(eventStore.append(event))
 
-    private fun LocalDateTime.withinSpecialTimeFrame() = isAfter(now().minusSeconds(3))
+    private fun LocalDateTime.withinTimeFrame() = isAfter(now().minusSeconds(3))
 }
 
 
