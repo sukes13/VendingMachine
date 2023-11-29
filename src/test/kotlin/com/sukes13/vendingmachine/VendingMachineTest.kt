@@ -45,7 +45,7 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When one euro inserted and cola button pressed, cola is in chute, price deducted and display shows thank you`() {
+    fun `When button pressed with enough money inserted, cola is in chute, price deducted and display shows thank you`() {
         val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
 
         assertThat(actual.chute).containsExactly(COLA)
@@ -54,7 +54,7 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When cola button pressed, chute stays empty, display shows price`() {
+    fun `When button pressed with no money inserted, chute stays empty, display shows price`() {
         val actual = VendingMachine().pressButton("Cola")
 
         assertThat(actual.chute).isEmpty()
@@ -73,12 +73,22 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When product bought, display shows PRICE but changes to INSERT COIN after 3 seconds`() {
+    fun `When button pressed with no money inserted, display shows PRICE but changes to INSERT COIN after 3 seconds`() {
         val actual = VendingMachine().pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
         await().atMost(Duration.ofMillis(3101)).untilAsserted {
             assertThat(actual.display()).isEqualTo("INSERT COIN")
+        }
+    }
+
+    @Test
+    fun `When button pressed with insufficient money inserted, display shows PRICE but changes to amount after 3 seconds`() {
+        val actual = VendingMachine().insert(COIN_FIFTY_CENT).pressButton("Cola")
+
+        assertThat(actual.display()).isEqualTo("PRICE 1,00")
+        await().atMost(Duration.ofMillis(3101)).untilAsserted {
+            assertThat(actual.display()).isEqualTo("0,50")
         }
     }
 
