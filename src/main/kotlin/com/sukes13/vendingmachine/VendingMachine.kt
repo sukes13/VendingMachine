@@ -12,7 +12,7 @@ data class VendingMachine(
     val eventStore: EventStore = EventStore()
 ) {
     val currentAmount = eventStore.eventsSinceOccurrenceOf<ProductBoughtEvent>()
-        .filterIsInstance<ValueInsertedEvent>()
+        .filterIsInstance<CoinAcceptedEvent>()
         .sumOf { it.amount }
     val chute = eventStore.eventsOfType<ProductBoughtEvent>()
         .map { it.product }
@@ -20,7 +20,7 @@ data class VendingMachine(
         .map { it.coin }
 
     fun insert(coin: Coin) = coin.value()
-        ?.let { copyAndAdd(ValueInsertedEvent(it)) }
+        ?.let { copyAndAdd(CoinAcceptedEvent(it)) }
         ?: copyAndAdd(CoinReturnedEvent(coin))
 
     fun pressButton(productCode: String) =
