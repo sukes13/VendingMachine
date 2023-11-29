@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.lang.Thread.sleep
+import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 class VendingMachineTest {
@@ -15,7 +17,7 @@ class VendingMachineTest {
     fun `When inserting a valid coin, value is displayed by machine`(coin: Coin, amount: String) {
         val actual = VendingMachine().insert(coin)
 
-        assertThat(actual.display).isEqualTo(amount)
+        assertThat(actual.display()).isEqualTo(amount)
     }
 
     companion object {
@@ -39,16 +41,25 @@ class VendingMachineTest {
         val actual = VendingMachine().insert(invalidCoin)
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
-        assertThat(actual.display).isEqualTo("INSERT COIN")
+        assertThat(actual.display()).isEqualTo("INSERT COIN")
     }
 
     @Test
-    fun `When one euro inserted and cola button pressed, cola is in chute, price deducted from amount and display shows thank you`() {
+    fun `When one euro inserted and cola button pressed, cola is in chute, price deducted and display shows thank you`() {
         val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
 
         assertThat(actual.chute).containsExactly(COLA)
         assertThat(actual.currentAmount).isEqualTo(0.0)
-        assertThat(actual.display).isEqualTo("THANK YOU")
+        assertThat(actual.display()).isEqualTo("THANK YOU")
+    }
+
+    @Test
+    fun `When product bought, display shows THANK YOU but changes to INSERT COIN after 3 seconds`() {
+        val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
+
+        assertThat(actual.display()).isEqualTo("THANK YOU")
+        sleep(3001)
+        assertThat(actual.display()).isEqualTo("INSERT COIN")
     }
 
     @Test
@@ -57,7 +68,7 @@ class VendingMachineTest {
 
         assertThat(actual.chute).isEmpty()
         assertThat(actual.currentAmount).isEqualTo(0.0)
-        assertThat(actual.display).isEqualTo("1,00")
+        assertThat(actual.display()).isEqualTo("1,00")
     }
 
 }
