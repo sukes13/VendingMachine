@@ -8,7 +8,7 @@ sealed interface VendingEvent {
     class CoinRejectedEvent(val coin: Coin) : VendingEvent
 
     sealed class TimedVendingEvent : VendingEvent {
-        val boughtOn: LocalDateTime = now()
+        val occurredOn: LocalDateTime = now()
 
         class ProductBoughtEvent(val product: Product) : TimedVendingEvent()
         class ButtonPressed(val product: Product) : TimedVendingEvent()

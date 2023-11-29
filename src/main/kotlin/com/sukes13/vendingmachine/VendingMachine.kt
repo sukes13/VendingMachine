@@ -19,33 +19,40 @@ data class VendingMachine(
     val coinChute = eventStore.eventsOfType<CoinRejectedEvent>()
         .map { it.coin }
 
-    fun display() =
-        when (val lastEvent = eventStore.events.lastOrNull()) {
-            is ProductBoughtEvent -> if (showingTimePassed(lastEvent.boughtOn)) "INSERT COIN" else "THANK YOU" 
-            is ButtonPressed -> lastEvent.product.price().asString()
-            else -> when (currentAmount) {
-                0.0 -> "INSERT COIN"
-                else -> currentAmount.asString()
+    fun insert(coin: Coin) = coin.value()
+        ?.let { copyAndAdd(AmountInsertedEvent(it)) }
+        ?: copyAndAdd(CoinRejectedEvent(coin))
+
+    fun pressButton(productCode: String) =
+        Product.toProduct(productCode).let { product ->
+            when {
+                currentAmount >= product.price() -> copyAndAdd(ProductBoughtEvent(product))
+                else -> copyAndAdd(ButtonPressed(product))
             }
         }
 
-    fun insert(coin: Coin) =
-        coin.value()
-            ?.let { copyAndAdd(AmountInsertedEvent(it)) }
-            ?: copyAndAdd(CoinRejectedEvent(coin))
-
-    fun pressButton(productCode: String): VendingMachine {
-        val product = Product.toProduct(productCode)
-        return product.price().let {
-            if (currentAmount >= it) copyAndAdd(ProductBoughtEvent(product))
-            else copyAndAdd(ButtonPressed(product))
-        }
+    fun display(): String {
+        val lastEvent = eventStore.events.lastOrNull()
+        return if (lastEvent is TimedVendingEvent && showTemporary(lastEvent.occurredOn)) {
+            temporaryDisplayed(lastEvent)
+        } else defaultDisplayed()
     }
+
+    private fun temporaryDisplayed(lastEvent: TimedVendingEvent) =
+        when (lastEvent) {
+            is ButtonPressed -> "PRICE ${lastEvent.product.price().asString()}"
+            is ProductBoughtEvent -> "THANK YOU"
+        }
+
+    private fun defaultDisplayed() =
+        when (currentAmount) {
+            0.0 -> "INSERT COIN"
+            else -> currentAmount.asString()
+        }
 
     private fun copyAndAdd(event: VendingEvent) = VendingMachine(eventStore.append(event))
 
-    private fun showingTimePassed(time: LocalDateTime) =
-        time.isBefore(now().minusSeconds(3))
+    private fun showTemporary(time: LocalDateTime) = time.isAfter(now().minusSeconds(3))
 }
 
 
