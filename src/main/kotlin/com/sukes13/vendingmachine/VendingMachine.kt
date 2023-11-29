@@ -32,11 +32,12 @@ data class VendingMachine(
         }
 
     fun display() =
-        eventStore.events.lastOrNull().let { lastEvent ->
-            if (lastEvent is TimedVendingEvent && lastEvent.occurredOn.withinSpecialTimeFrame())
-                specialMessage(lastEvent)
+        eventStore.lastEventOrNull().let { event ->
+            if (event is TimedVendingEvent && event.occurredOn.withinSpecialTimeFrame())
+                specialMessage(event)
             else defaultMessage()
         }
+
 
     private fun specialMessage(event: TimedVendingEvent) =
         when (event) {

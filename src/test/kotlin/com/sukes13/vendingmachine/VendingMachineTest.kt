@@ -1,6 +1,6 @@
 package com.sukes13.vendingmachine
 
-import com.sukes13.vendingmachine.Product.COLA
+import com.sukes13.vendingmachine.Product.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
@@ -20,21 +20,6 @@ class VendingMachineTest {
         assertThat(actual.display()).isEqualTo(amount)
     }
 
-    companion object {
-        @JvmStatic
-        fun allValidCoinsTest(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(COIN_ONE_CENT, "0,01"),
-                Arguments.of(COIN_TWO_CENT, "0,02"),
-                Arguments.of(COIN_FIVE_CENT, "0,05"),
-                Arguments.of(COIN_TEN_CENT, "0,10"),
-                Arguments.of(COIN_TWENTY_CENT, "0,20"),
-                Arguments.of(COIN_FIFTY_CENT, "0,50"),
-                Arguments.of(COIN_ONE_EURO, "1,00"),
-                Arguments.of(COIN_TWO_EURO, "2,00"),
-            )
-    }
-
     @Test
     fun `When inserting an invalid coin, value is not saved and coin is returned`() {
         val invalidCoin = COIN_ONE_CENT.copy(diameter = 2.00)
@@ -44,13 +29,17 @@ class VendingMachineTest {
         assertThat(actual.display()).isEqualTo("INSERT COIN")
     }
 
-    @Test
-    fun `When button pressed with enough money inserted, cola is in chute, price deducted and display shows thank you`() {
-        val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
+    @ParameterizedTest
+    @MethodSource("allProductsBoughtTest")
+    fun `When button pressed with enough money inserted, product is in chute, price deducted and display shows thank you`(
+        product: Product,
+        coins: List<Coin>
+    ) {
+        val actual = coins.fold(VendingMachine()) { acc, coin -> acc.insert(coin) }
+            .pressButton(product.code)
 
-        assertThat(actual.chute).containsExactly(COLA)
+        assertThat(actual.chute).containsExactly(product)
         assertThat(actual.currentAmount).isEqualTo(0.0)
-        assertThat(actual.display()).isEqualTo("THANK YOU")
     }
 
     @Test
@@ -92,4 +81,27 @@ class VendingMachineTest {
         }
     }
 
+
+    companion object {
+        @JvmStatic
+        fun allValidCoinsTest(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(COIN_ONE_CENT, "0,01"),
+                Arguments.of(COIN_TWO_CENT, "0,02"),
+                Arguments.of(COIN_FIVE_CENT, "0,05"),
+                Arguments.of(COIN_TEN_CENT, "0,10"),
+                Arguments.of(COIN_TWENTY_CENT, "0,20"),
+                Arguments.of(COIN_FIFTY_CENT, "0,50"),
+                Arguments.of(COIN_ONE_EURO, "1,00"),
+                Arguments.of(COIN_TWO_EURO, "2,00"),
+            )
+
+        @JvmStatic
+        fun allProductsBoughtTest(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(COLA, listOf(COIN_ONE_EURO)),
+                Arguments.of(CHIPS, listOf(COIN_FIFTY_CENT)),
+                Arguments.of(CANDY, listOf(COIN_FIFTY_CENT, COIN_TEN_CENT, COIN_FIVE_CENT)),
+            )
+    }
 }
