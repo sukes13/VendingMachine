@@ -31,16 +31,16 @@ data class VendingMachine(
             }
         }
 
-    fun display(): String {
-        val lastEvent = eventStore.events.lastOrNull()
-        return if (lastEvent is TimedVendingEvent && showTemporary(lastEvent.occurredOn)) {
-            temporaryDisplayed(lastEvent)
-        } else defaultDisplayed()
-    }
+    fun display() =
+        eventStore.events.lastOrNull().let { lastEvent ->
+            if (lastEvent is TimedVendingEvent && lastEvent.occurredOn.withinSpecialTimeFrame())
+                lastEvent.specialMessage()
+            else defaultDisplayed()
+        }
 
-    private fun temporaryDisplayed(lastEvent: TimedVendingEvent) =
-        when (lastEvent) {
-            is ButtonPressed -> "PRICE ${lastEvent.product.price().asString()}"
+    private fun TimedVendingEvent.specialMessage() =
+        when (this) {
+            is ButtonPressed -> "PRICE ${product.price().asString()}"
             is ProductBoughtEvent -> "THANK YOU"
         }
 
@@ -52,7 +52,7 @@ data class VendingMachine(
 
     private fun copyAndAdd(event: VendingEvent) = VendingMachine(eventStore.append(event))
 
-    private fun showTemporary(time: LocalDateTime) = time.isAfter(now().minusSeconds(3))
+    private fun LocalDateTime.withinSpecialTimeFrame() = isAfter(now().minusSeconds(3))
 }
 
 
