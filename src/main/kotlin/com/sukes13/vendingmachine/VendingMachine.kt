@@ -35,7 +35,7 @@ data class VendingMachine(
         eventStore.events.lastOrNull().let { lastEvent ->
             if (lastEvent is TimedVendingEvent && lastEvent.occurredOn.withinSpecialTimeFrame())
                 specialMessage(lastEvent)
-            else defaultDisplayed()
+            else defaultMessage()
         }
 
     private fun specialMessage(event: TimedVendingEvent) =
@@ -44,7 +44,7 @@ data class VendingMachine(
             is ProductBoughtEvent -> "THANK YOU"
         }
 
-    private fun defaultDisplayed() =
+    private fun defaultMessage() =
         when (currentAmount) {
             0.0 -> "INSERT COIN"
             else -> currentAmount.asString()
