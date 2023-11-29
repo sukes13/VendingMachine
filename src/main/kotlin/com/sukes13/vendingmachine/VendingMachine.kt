@@ -16,12 +16,12 @@ data class VendingMachine(
         .sumOf { it.amount }
     val chute = eventStore.eventsOfType<ProductBoughtEvent>()
         .map { it.product }
-    val coinChute = eventStore.eventsOfType<CoinRejectedEvent>()
+    val coinChute = eventStore.eventsOfType<CoinReturnedEvent>()
         .map { it.coin }
 
     fun insert(coin: Coin) = coin.value()
         ?.let { copyAndAdd(AmountInsertedEvent(it)) }
-        ?: copyAndAdd(CoinRejectedEvent(coin))
+        ?: copyAndAdd(CoinReturnedEvent(coin))
 
     fun pressButton(productCode: String) =
         Product.toProduct(productCode).let { product ->
