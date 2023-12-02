@@ -33,7 +33,7 @@ data class VendingMachine(
 
     private fun buyProductAndReturnChange(product: Product): VendingMachine {
         copyAndAdd(ProductBoughtEvent(product)).let {
-            val remainder = currentAmount - product.price()
+            val remainder = currentAmount.minusPrecise(product.price())
 
             return CoinRegistry.inCoins(remainder).fold(it) { acc, coin ->
                 acc.copyAndAdd(CoinReturnedEvent(coin))
@@ -67,3 +67,4 @@ data class VendingMachine(
 
 
 private fun Double.asString() = String.format("%.2f", this)
+internal fun Double.minusPrecise(second: Double) = (toBigDecimal() - second.toBigDecimal()).toDouble()
