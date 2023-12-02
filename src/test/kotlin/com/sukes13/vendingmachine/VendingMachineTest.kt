@@ -89,7 +89,7 @@ class VendingMachineTest {
         assertThat(actual.coinChute).containsExactlyInAnyOrder(
             COIN_ONE_EURO,
             COIN_TWENTY_CENT,
-            COIN_TWENTY_CENT,
+            COIN_TEN_CENT,
             COIN_FIVE_CENT
         )
     }
