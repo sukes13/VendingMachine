@@ -44,6 +44,4 @@ object CoinRegistry {
             coins + highestValueInRemainder.key
         )
     }
-
-    private fun Double.minusPrecise(second: Double) = (toBigDecimal() - second.toBigDecimal()).toDouble()
 }
