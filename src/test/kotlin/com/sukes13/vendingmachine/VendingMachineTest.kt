@@ -81,6 +81,19 @@ class VendingMachineTest {
         }
     }
 
+    @Test
+    fun `When button pressed with too much money inserted, product bought and change in coin chute`() {
+        val actual = VendingMachine().insert(COIN_TWO_EURO).pressButton(CANDY.code)
+
+        assertThat(actual.chute).containsExactly(CANDY)
+        assertThat(actual.coinChute).containsExactlyInAnyOrder(
+            COIN_ONE_EURO,
+            COIN_TWENTY_CENT,
+            COIN_TWENTY_CENT,
+            COIN_FIVE_CENT
+        )
+    }
+
 
     companion object {
         @JvmStatic

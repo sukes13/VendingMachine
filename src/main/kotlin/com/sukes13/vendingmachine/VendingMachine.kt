@@ -26,10 +26,20 @@ data class VendingMachine(
     fun pressButton(productCode: String) =
         Product.toProduct(productCode).let { product ->
             when {
-                currentAmount >= product.price() -> copyAndAdd(ProductBoughtEvent(product))
+                currentAmount >= product.price() -> buyProductAndReturnChange(product)
                 else -> copyAndAdd(ButtonPressed(product))
             }
         }
+
+    private fun buyProductAndReturnChange(product: Product): VendingMachine {
+        copyAndAdd(ProductBoughtEvent(product)).let {
+            val remainder = currentAmount - product.price()
+
+            return CoinRegistry.inCoins(remainder).fold(it) { acc, coin ->
+                acc.copyAndAdd(CoinReturnedEvent(coin))
+            }
+        }
+    }
 
     fun display() =
         eventStore.lastEventOrNull().let { event ->
@@ -37,7 +47,6 @@ data class VendingMachine(
                 temporaryMessage(event)
             else defaultMessage()
         }
-
 
     private fun temporaryMessage(event: TimedVendingEvent) =
         when (event) {
