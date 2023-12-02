@@ -28,4 +28,11 @@ object CoinRegistry {
     )
 
     fun Coin.value() = registry[this]
+    fun inCoins(remainder: Double, coins: List<Coin> = emptyList()): List<Coin> {
+        if (remainder <= 0) {
+            val highestValueInRemainder = registry.entries.maxBy { (_, value) -> value <= remainder }
+            inCoins(remainder - highestValueInRemainder.value, coins.plus(highestValueInRemainder.key))
+        }
+        return coins
+    }
 }
