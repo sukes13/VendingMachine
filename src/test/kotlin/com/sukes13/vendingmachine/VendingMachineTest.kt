@@ -94,6 +94,12 @@ class VendingMachineTest {
         )
     }
 
+    @Test
+    fun `When products taken from chute, chute is empty`() {
+        val actual = VendingMachine().insert(COIN_TWO_EURO).pressButton(CANDY.code).takeProducts()
+
+        assertThat(actual.chute).isEmpty()
+    }
 
     companion object {
         @JvmStatic
