@@ -14,7 +14,8 @@ data class VendingMachine(
     val currentAmount = eventStore.eventsSinceOccurrenceOf<ProductBoughtEvent>()
         .filterIsInstance<CoinAcceptedEvent>()
         .sumOf { it.amount }
-    val chute = eventStore.eventsOfType<ProductBoughtEvent>()
+    val chute = eventStore.eventsSinceOccurrenceOf<ProductsTakenEvent>()
+        .filterIsInstance<ProductBoughtEvent>()
         .map { it.product }
     val coinChute = eventStore.eventsOfType<CoinReturnedEvent>()
         .map { it.coin }
@@ -48,6 +49,8 @@ data class VendingMachine(
             else defaultMessage()
         }
 
+    fun takeProducts() = copyAndAdd(ProductsTakenEvent)
+
     private fun temporaryMessage(event: TimedVendingEvent) =
         when (event) {
             is ButtonPressed -> "PRICE ${event.product.price().asString()}"
@@ -59,12 +62,10 @@ data class VendingMachine(
             0.0 -> "INSERT COIN"
             else -> currentAmount.asString()
         }
+    private fun copyAndAdd(event: VendingEvent) = copy(eventStore = eventStore.append(event))
 
-    private fun copyAndAdd(event: VendingEvent) = VendingMachine(eventStore.append(event))
-
-    private fun LocalDateTime.withinTimeFrame() = isAfter(now().minusSeconds(3))
 }
-
 
 private fun Double.asString() = String.format("%.2f", this)
 internal fun Double.minusPrecise(second: Double) = (toBigDecimal() - second.toBigDecimal()).toDouble()
+private fun LocalDateTime.withinTimeFrame() = isAfter(now().minusSeconds(3))
