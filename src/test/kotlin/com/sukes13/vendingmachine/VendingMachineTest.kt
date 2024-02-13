@@ -101,6 +101,20 @@ class VendingMachineTest {
         assertThat(actual.chute).isEmpty()
     }
 
+    @Test
+    fun `When no coins inserted and 'return coins' is pressed, coin chute is empty`() {
+        val actual = VendingMachine().pressReturnCoinsButton()
+
+        assertThat(actual.coinChute).isEmpty()
+    }
+
+    @Test
+    fun `When two coins inserted and return coins is pressed, coins in coin chute`() {
+        val actual = VendingMachine().insert(COIN_TWO_EURO).insert(COIN_TWO_EURO).pressReturnCoinsButton()
+
+        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
+    }
+
     companion object {
         @JvmStatic
         fun allValidCoinsTest(): Stream<Arguments> =
