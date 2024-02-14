@@ -3,6 +3,7 @@ package com.sukes13.vendingmachine
 import com.sukes13.vendingmachine.Product.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -11,6 +12,7 @@ import java.time.Duration
 import java.util.stream.Stream
 
 class VendingMachineTest {
+    private val invalidCoin = COIN_ONE_CENT.copy(diameter = 2.00)
 
     @ParameterizedTest
     @MethodSource("allValidCoinsTest")
@@ -21,8 +23,7 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When inserting an invalid coin, value is not saved and coin is returned`() {
-        val invalidCoin = COIN_ONE_CENT.copy(diameter = 2.00)
+    fun `When inserting an invalid coin, value is not saved and coin is returned`() {        
         val actual = VendingMachine().insert(invalidCoin)
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
@@ -114,6 +115,29 @@ class VendingMachineTest {
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
     }
+
+    @Test
+    @Disabled("FIX ME PLEASE BY FIXING availableCoins...")
+    fun `When scenario with all actions happens, machine still works`() {
+        val actual = VendingMachine().insert(COIN_TWO_EURO)
+            .pressReturnCoinsButton()
+            .insert(invalidCoin)
+            .insert(COIN_TWO_EURO)
+            .pressButton(CANDY.code)
+
+        assertThat(actual.chute).containsExactly(CANDY)
+        assertThat(actual.display()).isEqualTo("THANK YOU")
+        assertThat(actual.takeProducts().chute).isEmpty()
+        assertThat(actual.coinChute).containsExactlyInAnyOrder(
+            invalidCoin,
+            COIN_ONE_EURO,
+            COIN_TWENTY_CENT,
+            COIN_TEN_CENT,
+            COIN_FIVE_CENT
+        )
+    }
+
+    //TODO: ADD SCENARIO OF SHOWING TIMED MESSAGES BUT OTHER BUTTON IS PRESSED DURING TIME INTERVAL...
 
     companion object {
         @JvmStatic

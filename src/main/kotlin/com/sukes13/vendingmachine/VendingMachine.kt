@@ -17,6 +17,7 @@ data class VendingMachine(
     val currentAmount = availableCoins.sumOf { it.value() ?: 0.0 }
         .minus(eventStore.eventsOfType<ProductBoughtEvent>().sumOf { it.product.price() })
 
+    //TODO: add products to ProductsTakenEvent and introduce inventory so eventsSinceLast can be removed here too
     val chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
 
     val coinChute = eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }
@@ -42,7 +43,7 @@ data class VendingMachine(
 
     fun pressReturnCoinsButton() = availableCoins.addAsCoinReturnedEventsTo(this)
 
-    fun takeProducts() = copyAndAdd(ProductsTakenEvent)
+    fun takeProducts() = copyAndAdd(ProductsTakenEvent(chute))
 
     private fun buyProductAndReturnChange(product: Product): VendingMachine {
         copyAndAdd(ProductBoughtEvent(product)).let {
@@ -75,7 +76,7 @@ data class VendingMachine(
 sealed interface VendingEvent {
     class CoinAcceptedEvent(val coin: Coin) : VendingEvent
     class CoinReturnedEvent(val coin: Coin) : VendingEvent
-    object ProductsTakenEvent : VendingEvent
+    class ProductsTakenEvent(val products: List<Product>) : VendingEvent
 
     sealed class TimedVendingEvent : VendingEvent {
         val occurredOn: LocalDateTime = now()
