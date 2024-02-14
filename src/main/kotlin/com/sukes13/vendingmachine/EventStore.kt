@@ -1,7 +1,7 @@
 package com.sukes13.vendingmachine
 
 data class EventStore(val events: List<VendingEvent> = emptyList()) : List<VendingEvent> by events {
-    fun append(event: VendingEvent) = copy(events = events + event)
+    fun append(events: List<VendingEvent>) = copy(events = this.events + events)
 
     inline fun <reified T : VendingEvent> eventsOfType() = events.filterIsInstance<T>()
 

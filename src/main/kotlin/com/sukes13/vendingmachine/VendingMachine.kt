@@ -13,9 +13,12 @@ data class VendingMachine(
 ) {
     private val availableCoins = eventStore.eventsOfType<CoinAcceptedEvent>().map { it.coin }
         .minus(eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet())
+
     val currentAmount = availableCoins.sumOf { it.value() ?: 0.0 }
         .minus(eventStore.eventsOfType<ProductBoughtEvent>().sumOf { it.product.price() })
+
     val chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
+
     val coinChute = eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }
 
     fun display() =
@@ -37,20 +40,14 @@ data class VendingMachine(
             }
         }
 
-    fun pressReturnCoinsButton() =
-        availableCoins.fold(this) { machine, coin ->
-            machine.copyAndAdd(CoinReturnedEvent(coin))
-        }
+    fun pressReturnCoinsButton() = availableCoins.addAsCoinReturnedEventsTo(this)
 
     fun takeProducts() = copyAndAdd(ProductsTakenEvent)
 
     private fun buyProductAndReturnChange(product: Product): VendingMachine {
         copyAndAdd(ProductBoughtEvent(product)).let {
             val remainder = currentAmount.minusPrecise(product.price())
-
-            return CoinRegistry.inCoins(remainder).fold(it) { acc, coin ->
-                acc.copyAndAdd(CoinReturnedEvent(coin))
-            }
+            return CoinRegistry.inCoins(remainder).addAsCoinReturnedEventsTo(it)
         }
     }
 
@@ -66,8 +63,12 @@ data class VendingMachine(
             else -> currentAmount.asString()
         }
 
-    private fun copyAndAdd(event: VendingEvent) = copy(eventStore = eventStore.append(event))
+    private fun List<Coin>.addAsCoinReturnedEventsTo(vendingMachine: VendingMachine) =
+        fold(listOf<VendingEvent>()) { newEvents, coin ->
+            newEvents + CoinReturnedEvent(coin)
+        }.let { vendingMachine.copyAndAdd(*it.toTypedArray()) }
 
+    private fun copyAndAdd(vararg events: VendingEvent) = copy(eventStore = eventStore.append(events.toList()))
 
 }
 
