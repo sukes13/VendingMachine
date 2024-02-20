@@ -11,11 +11,20 @@ import java.time.LocalDateTime.now
 data class VendingMachine(
     val eventStore: EventStore = EventStore()
 ) {
-    private val availableCoins = eventStore.eventsOfType<CoinAcceptedEvent>().map { it.coin }
-        .minus(eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet())
+    val availableCoins = run {
+        val coins = mutableListOf<Coin>()
+        eventStore.forEach {
+            when (it) {
+                is CoinAcceptedEvent -> coins.add(it.coin)
+                is CoinReturnedEvent -> coins.remove(it.coin)
+                is ProductBoughtEvent -> coins.removeAll(CoinRegistry.inCoins(it.product.price()))
+                else -> coins
+            }
+        }
+        coins
+    }
 
     val currentAmount = availableCoins.sumOf { it.value() ?: 0.0 }
-        .minus(eventStore.eventsOfType<ProductBoughtEvent>().sumOf { it.product.price() })
 
     //TODO: add products to ProductsTakenEvent and introduce inventory so eventsSinceLast can be removed here too
     val chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
@@ -23,7 +32,7 @@ data class VendingMachine(
     val coinChute = eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }
 
     fun display() =
-        eventStore.lastEventOrNull().let { event ->
+        eventStore.lastOrNull { it !is CoinReturnedEvent }.let { event ->
             if (event is TimedVendingEvent && event.occurredOn.withinTimeFrame())
                 temporaryMessage(event)
             else defaultMessage()
@@ -65,18 +74,17 @@ data class VendingMachine(
         }
 
     private fun List<Coin>.addAsCoinReturnedEventsTo(vendingMachine: VendingMachine) =
-        fold(listOf<VendingEvent>()) { newEvents, coin ->
-            newEvents + CoinReturnedEvent(coin)
-        }.let { vendingMachine.copyAndAdd(*it.toTypedArray()) }
+        fold(listOf<VendingEvent>()) { newEvents, coin -> newEvents + CoinReturnedEvent(coin) }
+            .let { vendingMachine.copyAndAdd(*it.toTypedArray()) }
 
     private fun copyAndAdd(vararg events: VendingEvent) = copy(eventStore = eventStore.append(events.toList()))
 
 }
 
 sealed interface VendingEvent {
-    class CoinAcceptedEvent(val coin: Coin) : VendingEvent
-    class CoinReturnedEvent(val coin: Coin) : VendingEvent
-    class ProductsTakenEvent(val products: List<Product>) : VendingEvent
+    data class CoinAcceptedEvent(val coin: Coin) : VendingEvent
+    data class CoinReturnedEvent(val coin: Coin) : VendingEvent
+    data class ProductsTakenEvent(val products: List<Product>) : VendingEvent
 
     sealed class TimedVendingEvent : VendingEvent {
         val occurredOn: LocalDateTime = now()

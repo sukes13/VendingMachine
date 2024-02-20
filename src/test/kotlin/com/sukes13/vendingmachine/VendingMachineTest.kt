@@ -12,7 +12,7 @@ import java.time.Duration
 import java.util.stream.Stream
 
 class VendingMachineTest {
-    private val invalidCoin = COIN_ONE_CENT.copy(diameter = 2.00)
+    private val invalidCoin = COIN_ONE_CENT.copy(name = "invalid", diameter = 2.00)
 
     @ParameterizedTest
     @MethodSource("allValidCoinsTest")
@@ -23,7 +23,7 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When inserting an invalid coin, value is not saved and coin is returned`() {        
+    fun `When inserting an invalid coin, value is not saved and coin is returned`() {
         val actual = VendingMachine().insert(invalidCoin)
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
@@ -36,7 +36,8 @@ class VendingMachineTest {
         product: Product,
         coins: List<Coin>
     ) {
-        val actual = coins.fold(VendingMachine()) { acc, coin -> acc.insert(coin) }
+        val actual = coins
+            .fold(VendingMachine()) { acc, coin -> acc.insert(coin) }
             .pressButton(product.code)
 
         assertThat(actual.chute).containsExactly(product)
@@ -117,18 +118,19 @@ class VendingMachineTest {
     }
 
     @Test
-    @Disabled("FIX ME PLEASE BY FIXING availableCoins...")
     fun `When scenario with all actions happens, machine still works`() {
         val actual = VendingMachine().insert(COIN_TWO_EURO)
             .pressReturnCoinsButton()
-            .insert(invalidCoin)
             .insert(COIN_TWO_EURO)
+            .insert(invalidCoin)
             .pressButton(CANDY.code)
 
+        assertThat(actual.availableCoins).containsExactly(COIN_TWO_EURO)
         assertThat(actual.chute).containsExactly(CANDY)
         assertThat(actual.display()).isEqualTo("THANK YOU")
         assertThat(actual.takeProducts().chute).isEmpty()
         assertThat(actual.coinChute).containsExactlyInAnyOrder(
+            COIN_TWO_EURO,
             invalidCoin,
             COIN_ONE_EURO,
             COIN_TWENTY_CENT,
