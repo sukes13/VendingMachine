@@ -16,6 +16,7 @@ data class Coin(
     private val mass: Double,
 ) {
     override fun toString() = "Coin($name)"
+
 }
 
 object CoinRegistry {
