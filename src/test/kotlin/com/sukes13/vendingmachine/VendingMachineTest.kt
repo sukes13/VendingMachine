@@ -22,21 +22,11 @@ class VendingMachineTest {
     }
 
     @Test
-    fun `When inserting a valid coin, coin is added to coin-registry`() {
-        val actual = VendingMachine()
-            .insert(COIN_FIFTY_CENT)
-            .insert(COIN_FIFTY_CENT)
-            .insert(COIN_ONE_CENT)
-
-        assertThat(actual.availableCoins).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
-    }
-
-    @Test
     fun `When inserting an invalid coin, active value is 0 and coin is returned`() {
         val actual = VendingMachine().insert(invalidCoin)
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
-        assertThat(actual.availableCoins).isEmpty()
+        assertThat(actual.activeAmount).isEqualTo(0.0)
         assertThat(actual.display()).isEqualTo("INSERT COIN")
     }
 
@@ -122,6 +112,17 @@ class VendingMachineTest {
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
     }
 
+
+    @Test
+    fun `When coins taken from coin chute, coin chute is empty`() {
+        val actual = VendingMachine()
+            .insert(COIN_FIFTY_CENT)
+            .pressReturnCoinsButton()            
+
+        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT)        
+        assertThat(actual.takeCoins().coinChute).isEmpty()
+    }
+
     @Test
     fun `When COLA-button pressed while showing 'thank you' after a purchase, price of COLA is shown iso 'thank you'`() {
         val machineAfterPurchase = VendingMachine().insert(COIN_ONE_EURO).pressButton(COLA.code)
@@ -152,7 +153,6 @@ class VendingMachineTest {
 
         assertThat(actual.activeAmount).isEqualTo(2.0)
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, invalidCoin)
-        assertThat(actual.availableCoins).containsExactlyInAnyOrder(COIN_TWO_EURO)
     }
 
     @Test
@@ -163,7 +163,6 @@ class VendingMachineTest {
             .insert(invalidCoin)
             .pressButton(CANDY.code)
 
-        assertThat(actual.availableCoins).containsExactly(COIN_TWO_EURO)
         assertThat(actual.chute).containsExactly(CANDY)
         assertThat(actual.display()).isEqualTo("THANK YOU")
         assertThat(actual.takeProducts().chute).isEmpty()
@@ -172,7 +171,6 @@ class VendingMachineTest {
             invalidCoin,
         )
     }
-
 
     companion object {
         @JvmStatic
