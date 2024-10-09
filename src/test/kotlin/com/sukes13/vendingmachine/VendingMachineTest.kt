@@ -3,6 +3,7 @@ package com.sukes13.vendingmachine
 import com.sukes13.vendingmachine.Product.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -170,6 +171,19 @@ class VendingMachineTest {
             COIN_TWO_EURO,
             invalidCoin,
         )
+    }
+
+    @Test
+    @Disabled
+    fun `When return coins button pressed, available coins in coin chute`() {
+        val actual = VendingMachine()
+            .insert(COIN_FIFTY_CENT)
+            .insert(COIN_FIFTY_CENT)
+            .insert(COIN_ONE_CENT)
+            .pressReturnCoinsButton()
+
+        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
+        assertThat(actual.coinChute).isEmpty()
     }
 
     companion object {
