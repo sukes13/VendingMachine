@@ -15,3 +15,4 @@ data class EventStore(val events: List<VendingEvent> = emptyList()) : List<Vendi
     fun lastEventOrNull() = events.lastOrNull()
 
 }
+

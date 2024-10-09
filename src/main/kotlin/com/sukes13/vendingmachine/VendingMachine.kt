@@ -32,9 +32,9 @@ data class VendingMachine(
 
     fun display() =
         eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
-            .let { toDisplayMessage(it) }
+            .let { determineDisplayMessage(it) }
 
-    private fun toDisplayMessage(activeTimedEvents: List<TimedVendingEvent>) =
+    private fun determineDisplayMessage(activeTimedEvents: List<TimedVendingEvent>) =
         if (activeTimedEvents.isEmpty()) defaultMessage()
         else temporaryMessage(activeTimedEvents.maxBy { it.occurredOn })
 
@@ -60,13 +60,15 @@ data class VendingMachine(
         CoinRegistry.inCoins(activeAmount)
             .map { CoinReturnedEvent(it) }
             .plus(ActiveAmountDecreasedEvent(activeAmount))
-            .let { copyAndAdd(*it.toTypedArray()) }
+            .let { eventsToAdd -> copyAndAdd(eventsToAdd) }
 
-    fun takeProducts() = copyAndAdd(ProductsTakenEvent(chute))
+    fun takeProducts() = copyAndAdd(ProductsTakenEvent())
 
     private fun buyProductAndCharge(product: Product) =
-        listOf(ActiveAmountDecreasedEvent(value = product.price()), ProductBoughtEvent(product))
-            .let { copyAndAdd(*it.toTypedArray()) }
+        copyAndAdd(
+            ActiveAmountDecreasedEvent(value = product.price()), 
+            ProductBoughtEvent(product)
+        )
 
     private fun temporaryMessage(event: TimedVendingEvent) =
         when (event) {
@@ -81,33 +83,8 @@ data class VendingMachine(
         }
 
     private fun copyAndAdd(vararg events: VendingEvent) = copy(eventStore = eventStore.append(events.toList()))
-
-
+    private fun copyAndAdd(events: List<VendingEvent>): VendingMachine = copyAndAdd(*events.toTypedArray())
 }
-
-sealed interface VendingEvent {
-    sealed interface CoinEvent : VendingEvent {
-        val coin: Coin
-
-        data class CoinAddedEvent(override val coin: Coin) : CoinEvent
-        data class CoinReturnedEvent(override val coin: Coin) : CoinEvent
-    }
-
-    sealed interface ActiveAmountEvent : VendingEvent {
-        data class ActiveAmountIncreasedEvent(val value: Double) : ActiveAmountEvent
-        data class ActiveAmountDecreasedEvent(val value: Double) : ActiveAmountEvent
-    }
-
-    data class ProductsTakenEvent(val products: List<Product>) : VendingEvent
-
-    sealed class TimedVendingEvent : VendingEvent {
-        val occurredOn: LocalDateTime = now()
-
-        class ProductBoughtEvent(val product: Product) : TimedVendingEvent()
-        class ButtonPressed(val product: Product) : TimedVendingEvent()
-    }
-}
-
 
 private fun Double.asString() = String.format("%.2f", this)
 internal fun Double.minusPrecise(second: Double) = (toBigDecimal() - second.toBigDecimal()).toDouble()
