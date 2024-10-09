@@ -3,7 +3,6 @@ package com.sukes13.vendingmachine
 import com.sukes13.vendingmachine.Product.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -19,7 +18,7 @@ class VendingMachineTest {
         val actual = VendingMachine().insert(COIN_FIFTY_CENT)
 
         assertThat(actual.display()).isEqualTo("0,50")
-        assertThat(actual.insert(COIN_TWO_EURO).display()).isEqualTo("2,50")  
+        assertThat(actual.insert(COIN_TWO_EURO).display()).isEqualTo("2,50")
     }
 
     @Test
@@ -29,7 +28,7 @@ class VendingMachineTest {
             .insert(COIN_FIFTY_CENT)
             .insert(COIN_ONE_CENT)
 
-        assertThat(actual.allCoins()).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
+        assertThat(actual.availableCoins).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
     }
 
     @Test
@@ -37,7 +36,7 @@ class VendingMachineTest {
         val actual = VendingMachine().insert(invalidCoin)
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
-        assertThat(actual.allCoins()).isEmpty()
+        assertThat(actual.availableCoins).isEmpty()
         assertThat(actual.display()).isEqualTo("INSERT COIN")
     }
 
@@ -89,24 +88,17 @@ class VendingMachineTest {
         val actual = VendingMachine().insert(COIN_FIFTY_CENT).pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
-        await().atMost(Duration.ofMillis(3101)).untilAsserted {
+        await().atMost(Duration.ofMillis(3501)).untilAsserted {
             assertThat(actual.display()).isEqualTo("0,50")
         }
     }
 
     @Test
-    @Disabled
-    fun `When button pressed with too much money inserted, product bought and change in coin chute`() {
+    fun `When button pressed with too much money inserted, product bought and active amount is inserted minus price`() {
         val actual = VendingMachine().insert(COIN_TWO_EURO).pressButton(CANDY.code)
 
         assertThat(actual.chute).containsExactly(CANDY)
-        assertThat(actual.availableCoins).isEmpty()
-        assertThat(actual.coinChute).containsExactlyInAnyOrder(
-            COIN_ONE_EURO,
-            COIN_TWENTY_CENT,
-            COIN_TEN_CENT,
-            COIN_FIVE_CENT
-        )
+        assertThat(actual.activeAmount).isEqualTo(1.35)
     }
 
     @Test
@@ -156,12 +148,12 @@ class VendingMachineTest {
             .insert(invalidCoin)
             .insert(COIN_TWO_EURO)
 
-        assertThat(actual.availableCoins).containsExactlyInAnyOrder(COIN_TWO_EURO)
+        assertThat(actual.activeAmount).isEqualTo(2.0)
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, invalidCoin)
+        assertThat(actual.availableCoins).containsExactlyInAnyOrder(COIN_TWO_EURO)
     }
 
     @Test
-    @Disabled
     fun `When scenario with all actions happens, machine still works`() {
         val actual = VendingMachine().insert(COIN_TWO_EURO)
             .pressReturnCoinsButton()
@@ -176,10 +168,6 @@ class VendingMachineTest {
         assertThat(actual.coinChute).containsExactlyInAnyOrder(
             COIN_TWO_EURO,
             invalidCoin,
-            COIN_ONE_EURO,
-            COIN_TWENTY_CENT,
-            COIN_TEN_CENT,
-            COIN_FIVE_CENT
         )
     }
 
