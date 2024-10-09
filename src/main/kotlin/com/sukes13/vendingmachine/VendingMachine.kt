@@ -1,5 +1,6 @@
 package com.sukes13.vendingmachine
 
+import com.sukes13.vendingmachine.CoinRegistry.minusCoins
 import com.sukes13.vendingmachine.CoinRegistry.value
 import com.sukes13.vendingmachine.ProductRegistry.price
 import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountDecreasedEvent
@@ -22,10 +23,8 @@ data class VendingMachine(
                 eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
 
     val availableCoins: List<Coin>
-        get() = eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }
-            .fold(eventStore.eventsOfType<CoinAddedEvent>().map { it.coin }) { coins, coin ->
-                coins.minusElement(coin)
-            }
+        get() = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin }
+            .minusCoins(eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin })
 
     val chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
 
@@ -59,17 +58,15 @@ data class VendingMachine(
     fun pressReturnCoinsButton() =
         CoinRegistry.inCoins(activeAmount)
             .map { CoinReturnedEvent(it) }
-            .let {
-                copyAndAdd(*it.toTypedArray()).copyAndAdd(ActiveAmountDecreasedEvent(activeAmount))
-            }
+            .plus(ActiveAmountDecreasedEvent(activeAmount))
+            .let { copyAndAdd(*it.toTypedArray()) }
 
     fun takeProducts() = copyAndAdd(ProductsTakenEvent(chute))
 
+    //TODO: fix that order of adding matters for displaying temporary messages!
     private fun buyProductAndCharge(product: Product) =
-        processCoinsForSell(product).copyAndAdd(ProductBoughtEvent(product))
-
-    private fun processCoinsForSell(product: Product) =
-        copyAndAdd(ActiveAmountDecreasedEvent(value = product.price()))
+        listOf(ActiveAmountDecreasedEvent(value = product.price()), ProductBoughtEvent(product))
+            .let { copyAndAdd(*it.toTypedArray()) }
 
     private fun temporaryMessage(event: TimedVendingEvent) =
         when (event) {
