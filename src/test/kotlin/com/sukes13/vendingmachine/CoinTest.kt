@@ -11,7 +11,7 @@ class CoinTest {
 
     @ParameterizedTest
     @MethodSource("allValidCoinsTest")
-    fun `When inserting a valid coin, active value is displayed by machine`(coin: Coin, amount: Double) {
+    fun `When inserting a valid coin, value is returned`(coin: Coin, amount: Double) {
         assertThat(coin.value()).isEqualTo(amount)
     }
 
@@ -20,6 +20,8 @@ class CoinTest {
     fun `When amount is provided, get it in as least coins as possible`(inputValue: Double, coinResult: List<Coin>) {
         assertThat(CoinRegistry.inCoins(inputValue)).containsExactlyInAnyOrder(*coinResult.toTypedArray())
     }
+    
+    //TODO: Add test + functionality to get amount in as least coins as possible but taking into account list of available coins
 
     companion object {
         @JvmStatic
