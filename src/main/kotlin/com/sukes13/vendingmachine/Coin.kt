@@ -33,10 +33,6 @@ object CoinRegistry {
 
     fun Coin.value() = registry[this]
 
-    fun List<Coin>.minusCoins(coins: List<Coin>): List<Coin> = coins
-        .fold(this) { coinsInList, coinToRemove -> coinsInList.minusElement(coinToRemove) }
-
-
     tailrec fun inCoins(remainder: Double, coins: List<Coin> = emptyList()): List<Coin> {
         if (remainder <= 0.0) {
             return coins
