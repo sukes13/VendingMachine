@@ -3,6 +3,8 @@ package com.sukes13.vendingmachine
 import com.sukes13.vendingmachine.CoinRegistry.value
 import com.sukes13.vendingmachine.ProductRegistry.price
 import com.sukes13.vendingmachine.VendingEvent.*
+import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountIncreasedEvent
+import com.sukes13.vendingmachine.VendingEvent.CoinEvent.*
 import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.*
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
@@ -11,20 +13,10 @@ import java.time.LocalDateTime.now
 data class VendingMachine(
     val eventStore: EventStore = EventStore()
 ) {
-    val availableCoins = run {
-        val coins = mutableListOf<Coin>()
-        eventStore.forEach {
-            when (it) {
-                is CoinAcceptedEvent -> coins.add(it.coin)
-                is CoinReturnedEvent -> coins.remove(it.coin)
-                is ProductBoughtEvent -> coins.removeAll(CoinRegistry.inCoins(it.product.price()))
-                else -> coins
-            }
-        }
-        coins
-    }
+    val activeAmount = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
+            eventStore.eventsOfType<ActiveAmountEvent.ActiveAmountDecreasedEvent>().sumOf { it.value }
 
-    val currentAmount = availableCoins.sumOf { it.value() ?: 0.0 }
+    val availableCoins = CoinRegistry.inCoins(activeAmount)
 
     //TODO: add products to ProductsTakenEvent and introduce inventory so eventsSinceLast can be removed here too
     val chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
@@ -39,13 +31,13 @@ data class VendingMachine(
         }
 
     fun insert(coin: Coin) = coin.value()
-        ?.let { copyAndAdd(CoinAcceptedEvent(coin)) }
+        ?.let { copyAndAdd(CoinAddedEvent(coin)) }
         ?: copyAndAdd(CoinReturnedEvent(coin))
 
     fun pressButton(productCode: String) =
         Product.toProduct(productCode).let { product ->
             when {
-                currentAmount >= product.price() -> buyProductAndReturnChange(product)
+                activeAmount >= product.price() -> buyProductAndReturnChange(product)
                 else -> copyAndAdd(ButtonPressed(product))
             }
         }
@@ -54,11 +46,13 @@ data class VendingMachine(
 
     fun takeProducts() = copyAndAdd(ProductsTakenEvent(chute))
 
-    private fun buyProductAndReturnChange(product: Product): VendingMachine {
-        copyAndAdd(ProductBoughtEvent(product)).let {
-            val remainder = currentAmount.minusPrecise(product.price())
-            return CoinRegistry.inCoins(remainder).addAsCoinReturnedEventsTo(it)
-        }
+    private fun buyProductAndReturnChange(product: Product) =
+        processCoinsForSell(product).copyAndAdd(ProductBoughtEvent(product))
+
+    private fun processCoinsForSell(product: Product): VendingMachine {
+        val vendingMachineTemp = CoinRegistry.inCoins(product.price(), availableCoins).addAsCoinUserEventsTo(this)
+        val remainder = vendingMachineTemp.activeAmount.minusPrecise(product.price())
+        return CoinRegistry.inCoins(remainder).addAsCoinReturnedEventsTo(vendingMachineTemp)
     }
 
     private fun temporaryMessage(event: TimedVendingEvent) =
@@ -68,22 +62,40 @@ data class VendingMachine(
         }
 
     private fun defaultMessage() =
-        when (currentAmount) {
+        when (activeAmount) {
             0.0 -> "INSERT COIN"
-            else -> currentAmount.asString()
+            else -> activeAmount.asString()
         }
 
     private fun List<Coin>.addAsCoinReturnedEventsTo(vendingMachine: VendingMachine) =
         fold(listOf<VendingEvent>()) { newEvents, coin -> newEvents + CoinReturnedEvent(coin) }
             .let { vendingMachine.copyAndAdd(*it.toTypedArray()) }
 
+    private fun List<Coin>.addAsCoinUserEventsTo(vendingMachine: VendingMachine) =
+        fold(listOf<VendingEvent>()) { newEvents, coin -> newEvents + CoinUsedEvent(coin) }
+            .let { vendingMachine.copyAndAdd(*it.toTypedArray()) }
+
     private fun copyAndAdd(vararg events: VendingEvent) = copy(eventStore = eventStore.append(events.toList()))
+
+    fun allCoins() = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin }
+
 
 }
 
 sealed interface VendingEvent {
-    data class CoinAcceptedEvent(val coin: Coin) : VendingEvent
-    data class CoinReturnedEvent(val coin: Coin) : VendingEvent
+    sealed interface CoinEvent : VendingEvent {
+        val coin: Coin
+
+        data class CoinAddedEvent(override val coin: Coin) : CoinEvent
+        data class CoinReturnedEvent(override val coin: Coin) : CoinEvent
+        data class CoinUsedEvent(override val coin: Coin) : CoinEvent
+    }
+
+    sealed interface ActiveAmountEvent : VendingEvent {
+        data class ActiveAmountIncreasedEvent(val value: Double) : ActiveAmountEvent
+        data class ActiveAmountDecreasedEvent(val value: Double) : ActiveAmountEvent
+    }
+
     data class ProductsTakenEvent(val products: List<Product>) : VendingEvent
 
     sealed class TimedVendingEvent : VendingEvent {

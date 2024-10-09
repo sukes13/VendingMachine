@@ -9,7 +9,7 @@ val COIN_FIFTY_CENT = Coin("50 cent", 24.25, 2.38, 7.80)
 val COIN_ONE_EURO = Coin("1 euro", 23.25, 2.33, 7.50)
 val COIN_TWO_EURO = Coin("2 euro", 25.75, 2.20, 8.50)
 
-data class Coin(
+class Coin(
     private val name: String,
     private val diameter: Double,
     private val thickness: Double,

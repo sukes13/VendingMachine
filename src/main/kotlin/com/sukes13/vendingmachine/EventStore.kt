@@ -7,7 +7,9 @@ data class EventStore(val events: List<VendingEvent> = emptyList()) : List<Vendi
 
     inline fun <reified T : VendingEvent> eventsSinceLast() =
         copy(events = events.indexOfLast { it is T }.let { lastOccurrence ->
-            if (lastOccurrence >= 0) events.drop(lastOccurrence) else events
+            if (lastOccurrence >= 0)
+                events.drop(lastOccurrence + 1)
+            else events
         })
 
     fun lastEventOrNull() = events.lastOrNull()
