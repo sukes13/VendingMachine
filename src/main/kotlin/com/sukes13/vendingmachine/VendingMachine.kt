@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
 
-data class VendingMachine(
+class VendingMachine(
     val eventStore: EventStore = EventStore()
 ) {
     val activeAmount: Double
@@ -82,7 +82,7 @@ data class VendingMachine(
             else -> activeAmount.asString()
         }
 
-    private fun copyAndAdd(vararg events: VendingEvent) = copy(eventStore = eventStore.append(events.toList()))
+    private fun copyAndAdd(vararg events: VendingEvent) = VendingMachine(eventStore = eventStore.append(events.toList()))
     private fun copyAndAdd(events: List<VendingEvent>): VendingMachine = copyAndAdd(*events.toTypedArray())
 }
 

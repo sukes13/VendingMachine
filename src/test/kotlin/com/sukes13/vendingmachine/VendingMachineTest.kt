@@ -176,19 +176,6 @@ class VendingMachineTest {
 
     companion object {
         @JvmStatic
-        fun allValidCoinsTest(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(COIN_ONE_CENT, "0,01"),
-                Arguments.of(COIN_TWO_CENT, "0,02"),
-                Arguments.of(COIN_FIVE_CENT, "0,05"),
-                Arguments.of(COIN_TEN_CENT, "0,10"),
-                Arguments.of(COIN_TWENTY_CENT, "0,20"),
-                Arguments.of(COIN_FIFTY_CENT, "0,50"),
-                Arguments.of(COIN_ONE_EURO, "1,00"),
-                Arguments.of(COIN_TWO_EURO, "2,00"),
-            )
-
-        @JvmStatic
         fun allProductsBoughtTest(): Stream<Arguments> =
             Stream.of(
                 Arguments.of(COLA, listOf(COIN_ONE_EURO)),
