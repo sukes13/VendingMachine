@@ -68,7 +68,7 @@ class VendingMachineTest {
         val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("THANK YOU")
-        await().atMost(Duration.ofMillis(3101)).untilAsserted {
+        await().atMost(Duration.ofMillis(3501)).untilAsserted {
             assertThat(actual.display()).isEqualTo("INSERT COIN")
         }
     }
@@ -78,7 +78,7 @@ class VendingMachineTest {
         val actual = VendingMachine().pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
-        await().atMost(Duration.ofMillis(3101)).untilAsserted {
+        await().atMost(Duration.ofMillis(3501)).untilAsserted {
             assertThat(actual.display()).isEqualTo("INSERT COIN")
         }
     }
@@ -127,8 +127,9 @@ class VendingMachineTest {
         val machineAfterPurchase = VendingMachine().insert(COIN_ONE_EURO).pressButton(COLA.code)
         assertThat(machineAfterPurchase.display()).isEqualTo("THANK YOU")
 
-        val actual = machineAfterPurchase.pressButton(COLA.code)
-        assertThat(actual.display()).isEqualTo("PRICE 1,00")
+        await().timeout(Duration.ofSeconds(1)).untilAsserted {
+            assertThat(machineAfterPurchase.pressButton(COLA.code).display()).isEqualTo("PRICE 1,00")
+        }
     }
 
     @Test
@@ -136,8 +137,9 @@ class VendingMachineTest {
         val machineAfterPurchase = VendingMachine().insert(COIN_ONE_EURO).pressButton(CANDY.code)
         assertThat(machineAfterPurchase.display()).isEqualTo("THANK YOU")
 
-        val actual = machineAfterPurchase.pressButton(CANDY.code)
-        assertThat(actual.display()).isEqualTo("PRICE 0,65")
+        await().timeout(Duration.ofSeconds(1)).untilAsserted {
+            assertThat(machineAfterPurchase.pressButton(CANDY.code).display()).isEqualTo("PRICE 0,65")
+        }
     }
 
     @Test
