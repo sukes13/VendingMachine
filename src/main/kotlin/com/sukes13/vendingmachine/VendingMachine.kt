@@ -31,11 +31,12 @@ data class VendingMachine(
     val coinChute = eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }
 
     fun display() =
-        eventStore.lastEventOrNull().let { event ->
-            if (event is TimedVendingEvent && event.occurredOn.withinTimeFrame())
-                temporaryMessage(event)
-            else defaultMessage()
-        }
+        eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
+            .let { toDisplayMessage(it) }
+
+    private fun toDisplayMessage(activeTimedEvents: List<TimedVendingEvent>) =
+        if (activeTimedEvents.isEmpty()) defaultMessage()
+        else temporaryMessage(activeTimedEvents.maxBy { it.occurredOn })
 
     fun insert(coin: Coin) = coin.value()
         ?.let {
@@ -63,7 +64,6 @@ data class VendingMachine(
 
     fun takeProducts() = copyAndAdd(ProductsTakenEvent(chute))
 
-    //TODO: fix that order of adding matters for displaying temporary messages!
     private fun buyProductAndCharge(product: Product) =
         listOf(ActiveAmountDecreasedEvent(value = product.price()), ProductBoughtEvent(product))
             .let { copyAndAdd(*it.toTypedArray()) }
