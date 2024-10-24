@@ -26,9 +26,9 @@ data class Machine(
 
     //Read
     fun display() = VendingMachine(eventStore).display()
-    val chute = VendingMachine(eventStore).chute
-    val coinChute = VendingMachine(eventStore).coinChute
-    val activeAmount = VendingMachine(eventStore).activeAmount
+    val chute get() = VendingMachine(eventStore).chute
+    val coinChute get() = VendingMachine(eventStore).coinChute
+    val activeAmount get() = VendingMachine(eventStore).activeAmount
 }
 
 
