@@ -16,7 +16,7 @@ class VendingMachineTest {
 
     @Test
     fun `When inserting a valid coin, active value is displayed by machine`() {
-        val actual = VendingMachine().insert(COIN_FIFTY_CENT)
+        val actual = Machine().insert(COIN_FIFTY_CENT)
 
         assertThat(actual.display()).isEqualTo("0,50")
         assertThat(actual.insert(COIN_TWO_EURO).display()).isEqualTo("2,50")
@@ -24,7 +24,7 @@ class VendingMachineTest {
 
     @Test
     fun `When inserting an invalid coin, active value is 0 and coin is returned`() {
-        val actual = VendingMachine().insert(invalidCoin)
+        val actual = Machine().insert(invalidCoin)
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
         assertThat(actual.activeAmount).isEqualTo(0.0)
@@ -38,7 +38,7 @@ class VendingMachineTest {
         coins: List<Coin>
     ) {
         val actual = coins
-            .fold(VendingMachine()) { acc, coin -> acc.insert(coin) }
+            .fold(Machine()) { acc, coin -> acc.insert(coin) }
             .pressButton(product.code)
 
         assertThat(actual.chute).containsExactly(product)
@@ -47,7 +47,7 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with no money inserted, chute stays empty, display shows price`() {
-        val actual = VendingMachine().pressButton("Cola")
+        val actual = Machine().pressButton("Cola")
 
         assertThat(actual.chute).isEmpty()
         assertThat(actual.activeAmount).isEqualTo(0.0)
@@ -56,7 +56,7 @@ class VendingMachineTest {
 
     @Test
     fun `When product bought, display shows THANK YOU but changes to INSERT COIN after 3 seconds`() {
-        val actual = VendingMachine().insert(COIN_ONE_EURO).pressButton("Cola")
+        val actual = Machine().insert(COIN_ONE_EURO).pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("THANK YOU")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
@@ -66,7 +66,7 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with no money inserted, display shows PRICE but changes to INSERT COIN after 3 seconds`() {
-        val actual = VendingMachine().pressButton("Cola")
+        val actual = Machine().pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
@@ -76,7 +76,7 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with insufficient money inserted, display shows PRICE but changes to amount after 3 seconds`() {
-        val actual = VendingMachine().insert(COIN_FIFTY_CENT).pressButton("Cola")
+        val actual = Machine().insert(COIN_FIFTY_CENT).pressButton("Cola")
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
@@ -86,7 +86,7 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with too much money inserted, product bought and active amount is inserted minus price`() {
-        val actual = VendingMachine().insert(COIN_TWO_EURO).pressButton(CANDY.code)
+        val actual = Machine().insert(COIN_TWO_EURO).pressButton(CANDY.code)
 
         assertThat(actual.chute).containsExactly(CANDY)
         assertThat(actual.activeAmount).isEqualTo(1.35)
@@ -94,21 +94,21 @@ class VendingMachineTest {
 
     @Test
     fun `When products taken from chute, chute is empty`() {
-        val actual = VendingMachine().insert(COIN_TWO_EURO).pressButton(CANDY.code).takeProducts()
+        val actual = Machine().insert(COIN_TWO_EURO).pressButton(CANDY.code).takeProducts()
 
         assertThat(actual.chute).isEmpty()
     }
 
     @Test
     fun `When no coins inserted and 'return coins' is pressed, coin chute is empty`() {
-        val actual = VendingMachine().pressReturnCoinsButton()
+        val actual = Machine().pressReturnCoinsButton()
 
         assertThat(actual.coinChute).isEmpty()
     }
 
     @Test
     fun `When two coins inserted and return coins is pressed, coins in coin chute`() {
-        val actual = VendingMachine().insert(COIN_TWO_EURO).insert(COIN_TWO_EURO).pressReturnCoinsButton()
+        val actual = Machine().insert(COIN_TWO_EURO).insert(COIN_TWO_EURO).pressReturnCoinsButton()
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
     }
@@ -116,7 +116,7 @@ class VendingMachineTest {
 
     @Test
     fun `When coins taken from coin chute, coin chute is empty`() {
-        val actual = VendingMachine()
+        val actual = Machine()
             .insert(COIN_FIFTY_CENT)
             .pressReturnCoinsButton()            
 
@@ -126,7 +126,7 @@ class VendingMachineTest {
 
     @Test
     fun `When COLA-button pressed while showing 'thank you' after a purchase, price of COLA is shown iso 'thank you'`() {
-        val machineAfterPurchase = VendingMachine().insert(COIN_ONE_EURO).pressButton(COLA.code)
+        val machineAfterPurchase = Machine().insert(COIN_ONE_EURO).pressButton(COLA.code)
         assertThat(machineAfterPurchase.display()).isEqualTo("THANK YOU")
 
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
@@ -136,7 +136,7 @@ class VendingMachineTest {
 
     @Test
     fun `When CANDY-button pressed while showing 'thank you' after a purchase, price of CANDY is shown iso 'thank you'`() {
-        val machineAfterPurchase = VendingMachine().insert(COIN_ONE_EURO).pressButton(CANDY.code)
+        val machineAfterPurchase = Machine().insert(COIN_ONE_EURO).pressButton(CANDY.code)
         assertThat(machineAfterPurchase.display()).isEqualTo("THANK YOU")
 
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
@@ -146,7 +146,7 @@ class VendingMachineTest {
 
     @Test
     fun `When some coins inserted and rejected, correct number of availableCoins in Machine`() {
-        val actual = VendingMachine()
+        val actual = Machine()
             .insert(COIN_TWO_EURO)
             .pressReturnCoinsButton()
             .insert(invalidCoin)
@@ -158,7 +158,7 @@ class VendingMachineTest {
 
     @Test
     fun `When scenario with all actions happens, machine still works`() {
-        val actual = VendingMachine().insert(COIN_TWO_EURO)
+        val actual = Machine().insert(COIN_TWO_EURO)
             .pressReturnCoinsButton()
             .insert(COIN_TWO_EURO)
             .insert(invalidCoin)
@@ -176,7 +176,7 @@ class VendingMachineTest {
     @Test
     @Disabled
     fun `When return coins button pressed, available coins in coin chute`() {
-        val actual = VendingMachine()
+        val actual = Machine()
             .insert(COIN_FIFTY_CENT)
             .insert(COIN_FIFTY_CENT)
             .insert(COIN_ONE_CENT)
