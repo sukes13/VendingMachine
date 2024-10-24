@@ -15,21 +15,17 @@ import java.time.LocalDateTime.now
 data class Machine(
     val eventStore: EventStore = EventStore()
 ) {
+    //Write
     fun insert(coin: Coin) = VendingMachine(eventStore).insert(coin, this)
-    fun display() = VendingMachine(eventStore).display()
-    
-    fun publishEvents(vararg events: VendingEvent) =
-        copy(eventStore = eventStore.publish(events.toList()))
-
-    fun publishEvents(events: List<VendingEvent>) = 
-        publishEvents(*events.toTypedArray())
-
     fun pressButton(productName: String) = VendingMachine(eventStore).pressButton(productName,this)
     fun takeProducts()= VendingMachine(eventStore).takeProducts(this)
     fun pressReturnCoinsButton() = VendingMachine(eventStore).pressReturnCoinsButton(this)
     fun takeCoins() = VendingMachine(eventStore).takeCoins(this)
+    fun publishEvents(vararg events: VendingEvent) = copy(eventStore = eventStore.publish(events.toList()))
+    fun publishEvents(events: List<VendingEvent>) = publishEvents(*events.toTypedArray())
 
     //Read
+    fun display() = VendingMachine(eventStore).display()
     val chute = VendingMachine(eventStore).chute
     val coinChute = VendingMachine(eventStore).coinChute
     val activeAmount = VendingMachine(eventStore).activeAmount
@@ -37,21 +33,12 @@ data class Machine(
 
 
 //TODO: split read and write sides
-class VendingMachine {
-    val activeAmount: Double
-    val chute: List<Product>
-    val coinChute: List<Coin>
-    val currentTimedEvents: List<TimedVendingEvent>
-
-    constructor(eventStore: EventStore = EventStore()) {
-        this.activeAmount = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
-                eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
-        this.chute =
-            eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
-        this.coinChute = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin }
-        this.currentTimedEvents =
-            eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
-    }
+data class VendingMachine(private val eventStore: EventStore = EventStore()) {
+    val activeAmount get()  = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
+            eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
+    val chute get() = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
+    val coinChute get() = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin }
+    private val currentTimedEvents get() = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
 
     fun display() =
         if (currentTimedEvents.isEmpty()) defaultMessage()
