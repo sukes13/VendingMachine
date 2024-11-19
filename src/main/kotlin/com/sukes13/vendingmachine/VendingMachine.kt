@@ -15,24 +15,24 @@ import java.time.LocalDateTime.now
 data class Machine(
     val eventStore: EventStore = EventStore()
 ) {
+    private val vendingMachine get() = VendingMachine.createFrom(eventStore)
+    private fun copyAndAdd(newEvents: List<VendingEvent>) = copy(eventStore = eventStore.publish(newEvents))
+
     //Write
-    fun insert(coin: Coin) = VendingMachine(eventStore).insert(coin, this)
-    fun pressButton(productName: String) = VendingMachine(eventStore).pressButton(productName,this)
-    fun takeProducts()= VendingMachine(eventStore).takeProducts(this)
-    fun pressReturnCoinsButton() = VendingMachine(eventStore).pressReturnCoinsButton(this)
-    fun takeCoins() = VendingMachine(eventStore).takeCoins(this)
-    fun publishEvents(vararg events: VendingEvent) = copy(eventStore = eventStore.publish(events.toList()))
-    fun publishEvents(events: List<VendingEvent>) = publishEvents(*events.toTypedArray())
+    fun insert(coin: Coin) = copyAndAdd(vendingMachine.insert(coin))
+    fun pressButton(productName: String) = copyAndAdd(vendingMachine.pressButton(productName))
+    fun takeProducts()= copyAndAdd(vendingMachine.takeProducts())
+    fun pressReturnCoinsButton() = copyAndAdd(vendingMachine.pressReturnCoinsButton())
+    fun takeCoins() = copyAndAdd(vendingMachine.takeCoins())
 
     //Read
-    fun display() = VendingMachine(eventStore).display()
-    val chute get() = VendingMachine(eventStore).chute
-    val coinChute get() = VendingMachine(eventStore).coinChute
-    val activeAmount get() = VendingMachine(eventStore).activeAmount
+    fun display() = vendingMachine.display()
+    val chute get() = vendingMachine.chute
+    val coinChute get() = vendingMachine.coinChute
+    val activeAmount get() = vendingMachine.activeAmount
 }
 
 
-//TODO: split read and write sides
 data class VendingMachine(private val eventStore: EventStore = EventStore()) {
     val activeAmount get()  = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
             eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
@@ -44,33 +44,32 @@ data class VendingMachine(private val eventStore: EventStore = EventStore()) {
         if (currentTimedEvents.isEmpty()) defaultMessage()
         else temporaryMessage(currentTimedEvents.maxBy { it.occurredOn })
 
-    fun insert(coin: Coin, machine: Machine) =
+    fun insert(coin: Coin) =
         coin.value()?.let {
-            machine.publishEvents(
+            listOf(
                 CoinAddedEvent(coin),
                 ActiveAmountIncreasedEvent(it)
             )
-        } ?: machine.publishEvents(CoinReturnedEvent(coin))
+        } ?: listOf(CoinReturnedEvent(coin))
 
-    fun pressButton(productCode: String, machine: Machine) =
+    fun pressButton(productCode: String) =
         Product.toProduct(productCode).let { product ->
             when {
-                activeAmount >= product.price() -> buyProductAndCharge(product, machine)
-                else -> machine.publishEvents(ButtonPressed(product))
+                activeAmount >= product.price() -> buyProductAndCharge(product)
+                else -> listOf(ButtonPressed(product))
             }
         }
 
-    fun pressReturnCoinsButton(machine: Machine) =
+    fun pressReturnCoinsButton() =
         CoinRegistry.inCoins(activeAmount)
             .map { CoinReturnedEvent(it) }
             .plus(ActiveAmountDecreasedEvent(activeAmount))
-            .let { eventsToAdd -> machine.publishEvents(eventsToAdd) }
 
-    fun takeProducts(machine: Machine) = machine.publishEvents(ProductsTakenEvent())
-    fun takeCoins(machine: Machine) = machine.publishEvents(CoinsTakenEvent())
+    fun takeProducts() = listOf(ProductsTakenEvent())
+    fun takeCoins() = listOf(CoinsTakenEvent())
 
-    private fun buyProductAndCharge(product: Product, machine: Machine) =
-        machine.publishEvents(
+    private fun buyProductAndCharge(product: Product) =
+        listOf(
             ActiveAmountDecreasedEvent(value = product.price()),
             ProductBoughtEvent(product)
         )
@@ -86,6 +85,12 @@ data class VendingMachine(private val eventStore: EventStore = EventStore()) {
             0.0 -> "INSERT COIN"
             else -> activeAmount.asString()
         }
+
+    companion object {
+        fun createFrom(eventStore: EventStore): VendingMachine {
+            return VendingMachine(eventStore)
+        }
+    }
 
 
 }
