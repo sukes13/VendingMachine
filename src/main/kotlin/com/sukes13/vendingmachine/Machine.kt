@@ -12,14 +12,11 @@ data class Machine(
             is PressButtonCommand -> pushToStore(vendingMachine.pressButton(command.productCode))
             is TakeProductsCommand -> pushToStore(vendingMachine.takeProducts())
             is PressReturnCoinsButton -> pushToStore(vendingMachine.pressReturnCoinsButton())
+            is TakeCoinsCommand -> pushToStore(vendingMachine.takeCoins())
         }
-
-    //Write
-    fun takeCoins() = pushToStore(vendingMachine.takeCoins())
 
     //Read
     fun display() = vendingMachine.display()
-
     val chute get() = vendingMachine.chute
     val coinChute get() = vendingMachine.coinChute
     val activeAmount get() = vendingMachine.activeAmount

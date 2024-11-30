@@ -126,7 +126,7 @@ class VendingMachineTest {
             .execute(PressReturnCoinsButton)            
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT)        
-        assertThat(actual.takeCoins().coinChute).isEmpty()
+        assertThat(actual.execute(TakeCoinsCommand).coinChute).isEmpty()
     }
 
     @Test
