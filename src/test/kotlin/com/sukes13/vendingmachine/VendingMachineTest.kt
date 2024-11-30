@@ -16,15 +16,15 @@ class VendingMachineTest {
     
     @Test
     fun `When inserting a valid coin, active value is displayed by machine`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_FIFTY_CENT))
+        val actual = Machine().execute(InsertCoin(COIN_FIFTY_CENT))
 
         assertThat(actual.display()).isEqualTo("0,50")
-        assertThat(actual.execute(InsertCoinCommand(COIN_TWO_EURO)).display()).isEqualTo("2,50")
+        assertThat(actual.execute(InsertCoin(COIN_TWO_EURO)).display()).isEqualTo("2,50")
     }
 
     @Test
     fun `When inserting an invalid coin, active value is 0 and coin is returned`() {
-        val actual = Machine().execute(InsertCoinCommand(invalidCoin))
+        val actual = Machine().execute(InsertCoin(invalidCoin))
 
         assertThat(actual.coinChute).containsExactly(invalidCoin)
         assertThat(actual.activeAmount).isEqualTo(0.0)
@@ -38,8 +38,8 @@ class VendingMachineTest {
         coins: List<Coin>
     ) {
         val actual = coins
-            .fold(Machine()) { acc, coin -> acc.execute(InsertCoinCommand(coin)) }
-            .execute(PressButtonCommand(product.code))
+            .fold(Machine()) { acc, coin -> acc.execute(InsertCoin(coin)) }
+            .execute(ChooseProduct(product.code))
 
         assertThat(actual.chute).containsExactly(product)
         assertThat(actual.activeAmount).isEqualTo(0.0)
@@ -47,7 +47,7 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with no money inserted, chute stays empty, display shows price`() {
-        val actual = Machine().execute(PressButtonCommand("Cola"))
+        val actual = Machine().execute(ChooseProduct("Cola"))
 
         assertThat(actual.chute).isEmpty()
         assertThat(actual.activeAmount).isEqualTo(0.0)
@@ -56,8 +56,8 @@ class VendingMachineTest {
 
     @Test
     fun `When product bought, display shows THANK YOU but changes to INSERT COIN after 3 seconds`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_ONE_EURO))
-            .execute(PressButtonCommand("Cola"))
+        val actual = Machine().execute(InsertCoin(COIN_ONE_EURO))
+            .execute(ChooseProduct("Cola"))
 
         assertThat(actual.display()).isEqualTo("THANK YOU")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
@@ -67,7 +67,7 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with no money inserted, display shows PRICE but changes to INSERT COIN after 3 seconds`() {
-        val actual = Machine().execute(PressButtonCommand("Cola"))
+        val actual = Machine().execute(ChooseProduct("Cola"))
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
@@ -77,8 +77,8 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with insufficient money inserted, display shows PRICE but changes to amount after 3 seconds`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_FIFTY_CENT))
-            .execute(PressButtonCommand("Cola"))
+        val actual = Machine().execute(InsertCoin(COIN_FIFTY_CENT))
+            .execute(ChooseProduct("Cola"))
 
         assertThat(actual.display()).isEqualTo("PRICE 1,00")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
@@ -88,8 +88,8 @@ class VendingMachineTest {
 
     @Test
     fun `When button pressed with too much money inserted, product bought and active amount is inserted minus price`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO))
-            .execute(PressButtonCommand(CANDY.code))
+        val actual = Machine().execute(InsertCoin(COIN_TWO_EURO))
+            .execute(ChooseProduct(CANDY.code))
 
         assertThat(actual.chute).containsExactly(CANDY)
         assertThat(actual.activeAmount).isEqualTo(1.35)
@@ -97,23 +97,23 @@ class VendingMachineTest {
 
     @Test
     fun `When products taken from chute, chute is empty`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO))
-            .execute(PressButtonCommand(CANDY.code))
-            .execute(TakeProductsCommand)
+        val actual = Machine().execute(InsertCoin(COIN_TWO_EURO))
+            .execute(ChooseProduct(CANDY.code))
+            .execute(TakeProducts)
 
         assertThat(actual.chute).isEmpty()
     }
 
     @Test
     fun `When no coins inserted and 'return coins' is pressed, coin chute is empty`() {
-        val actual = Machine().execute(PressReturnCoinsButton)
+        val actual = Machine().execute(ReturnCoins)
 
         assertThat(actual.coinChute).isEmpty()
     }
 
     @Test
     fun `When two coins inserted and return coins is pressed, coins in coin chute`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO)).execute(InsertCoinCommand(COIN_TWO_EURO)).execute(PressReturnCoinsButton)
+        val actual = Machine().execute(InsertCoin(COIN_TWO_EURO)).execute(InsertCoin(COIN_TWO_EURO)).execute(ReturnCoins)
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
     }
@@ -122,40 +122,40 @@ class VendingMachineTest {
     @Test
     fun `When coins taken from coin chute, coin chute is empty`() {
         val actual = Machine()
-            .execute(InsertCoinCommand(COIN_FIFTY_CENT))
-            .execute(PressReturnCoinsButton)            
+            .execute(InsertCoin(COIN_FIFTY_CENT))
+            .execute(ReturnCoins)            
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT)        
-        assertThat(actual.execute(TakeCoinsCommand).coinChute).isEmpty()
+        assertThat(actual.execute(TakeCoins).coinChute).isEmpty()
     }
 
     @Test
     fun `When COLA-button pressed while showing 'thank you' after a purchase, price of COLA is shown iso 'thank you'`() {
-        val machineAfterPurchase = Machine().execute(InsertCoinCommand(COIN_ONE_EURO)).execute(PressButtonCommand(COLA.code))
+        val machineAfterPurchase = Machine().execute(InsertCoin(COIN_ONE_EURO)).execute(ChooseProduct(COLA.code))
         assertThat(machineAfterPurchase.display()).isEqualTo("THANK YOU")
 
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
-            assertThat(machineAfterPurchase.execute(PressButtonCommand(COLA.code)).display()).isEqualTo("PRICE 1,00")
+            assertThat(machineAfterPurchase.execute(ChooseProduct(COLA.code)).display()).isEqualTo("PRICE 1,00")
         }
     }
 
     @Test
     fun `When CANDY-button pressed while showing 'thank you' after a purchase, price of CANDY is shown iso 'thank you'`() {
-        val machineAfterPurchase = Machine().execute(InsertCoinCommand(COIN_ONE_EURO)).execute(PressButtonCommand(CANDY.code))
+        val machineAfterPurchase = Machine().execute(InsertCoin(COIN_ONE_EURO)).execute(ChooseProduct(CANDY.code))
         assertThat(machineAfterPurchase.display()).isEqualTo("THANK YOU")
 
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
-            assertThat(machineAfterPurchase.execute(PressButtonCommand(CANDY.code)).display()).isEqualTo("PRICE 0,65")
+            assertThat(machineAfterPurchase.execute(ChooseProduct(CANDY.code)).display()).isEqualTo("PRICE 0,65")
         }
     }
 
     @Test
     fun `When some coins inserted and rejected, correct number of availableCoins in Machine`() {
         val actual = Machine()
-            .execute(InsertCoinCommand(COIN_TWO_EURO))
-            .execute(PressReturnCoinsButton)
-            .execute(InsertCoinCommand(invalidCoin))
-            .execute(InsertCoinCommand(COIN_TWO_EURO))
+            .execute(InsertCoin(COIN_TWO_EURO))
+            .execute(ReturnCoins)
+            .execute(InsertCoin(invalidCoin))
+            .execute(InsertCoin(COIN_TWO_EURO))
 
         assertThat(actual.activeAmount).isEqualTo(2.0)
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, invalidCoin)
@@ -163,15 +163,15 @@ class VendingMachineTest {
 
     @Test
     fun `When scenario with all actions happens, machine still works`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO))
-            .execute(PressReturnCoinsButton)
-            .execute(InsertCoinCommand(COIN_TWO_EURO))
-            .execute(InsertCoinCommand(invalidCoin))
-            .execute(PressButtonCommand(CANDY.code))
+        val actual = Machine().execute(InsertCoin(COIN_TWO_EURO))
+            .execute(ReturnCoins)
+            .execute(InsertCoin(COIN_TWO_EURO))
+            .execute(InsertCoin(invalidCoin))
+            .execute(ChooseProduct(CANDY.code))
 
         assertThat(actual.chute).containsExactly(CANDY)
         assertThat(actual.display()).isEqualTo("THANK YOU")
-        assertThat(actual.execute(TakeProductsCommand).chute).isEmpty()
+        assertThat(actual.execute(TakeProducts).chute).isEmpty()
         assertThat(actual.coinChute).containsExactlyInAnyOrder(
             COIN_TWO_EURO,
             invalidCoin,
@@ -182,10 +182,10 @@ class VendingMachineTest {
     @Disabled
     fun `When return coins button pressed, available coins in coin chute`() {
         val actual = Machine()
-            .execute(InsertCoinCommand(COIN_FIFTY_CENT))
-            .execute(InsertCoinCommand(COIN_FIFTY_CENT))
-            .execute(InsertCoinCommand(COIN_ONE_CENT))
-            .execute(PressReturnCoinsButton)
+            .execute(InsertCoin(COIN_FIFTY_CENT))
+            .execute(InsertCoin(COIN_FIFTY_CENT))
+            .execute(InsertCoin(COIN_ONE_CENT))
+            .execute(ReturnCoins)
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
         assertThat(actual.coinChute).isEmpty()
