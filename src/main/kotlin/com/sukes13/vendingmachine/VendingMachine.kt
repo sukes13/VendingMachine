@@ -33,13 +33,12 @@ data class Machine(
 }
 
 
-data class VendingMachine(private val eventStore: EventStore = EventStore()) {
-    val activeAmount get()  = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
-            eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
-    val chute get() = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
-    val coinChute get() = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin }
-    private val currentTimedEvents get() = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
-
+data class VendingMachine private constructor(
+    val activeAmount: Double = 0.0,
+    val chute: List<Product> = emptyList(),
+    val coinChute : List<Coin> = emptyList(),
+    private val currentTimedEvents : List<TimedVendingEvent> = emptyList(),
+) {
     fun display() =
         if (currentTimedEvents.isEmpty()) defaultMessage()
         else temporaryMessage(currentTimedEvents.maxBy { it.occurredOn })
@@ -88,7 +87,13 @@ data class VendingMachine(private val eventStore: EventStore = EventStore()) {
 
     companion object {
         fun createFrom(eventStore: EventStore): VendingMachine {
-            return VendingMachine(eventStore)
+            val activeAmount  = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
+                    eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
+            val chute  = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
+            val coinChute  = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin }
+            val currentTimedEvents  = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
+
+            return VendingMachine(activeAmount = activeAmount,chute = chute, coinChute = coinChute, currentTimedEvents = currentTimedEvents)
         }
     }
 
