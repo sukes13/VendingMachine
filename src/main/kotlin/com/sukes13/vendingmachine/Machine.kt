@@ -9,11 +9,11 @@ data class Machine(
     fun execute(command: MachineCommand): Machine =
         when (command) {
             is InsertCoinCommand -> pushToStore(vendingMachine.insert(command.coin))
-            is ButtonPressedCommand -> pushToStore(vendingMachine.pressButton(command.productCode))
+            is PressButtonCommand -> pushToStore(vendingMachine.pressButton(command.productCode))
+            is TakeProductsCommand -> pushToStore(vendingMachine.takeProducts())
         }
 
     //Write
-    fun takeProducts() = pushToStore(vendingMachine.takeProducts())
     fun pressReturnCoinsButton() = pushToStore(vendingMachine.pressReturnCoinsButton())
     fun takeCoins() = pushToStore(vendingMachine.takeCoins())
 
