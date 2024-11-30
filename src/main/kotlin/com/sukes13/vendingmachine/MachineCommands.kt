@@ -1,7 +1,10 @@
 package com.sukes13.vendingmachine
 
 
-interface MachineCommand
+sealed interface MachineCommand
+
 class InsertCoinCommand(val coin: Coin) : MachineCommand
+class ButtonPressedCommand(val productCode: String) : MachineCommand
+
 
 
