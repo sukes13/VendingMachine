@@ -11,10 +11,10 @@ data class Machine(
             is InsertCoinCommand -> pushToStore(vendingMachine.insert(command.coin))
             is PressButtonCommand -> pushToStore(vendingMachine.pressButton(command.productCode))
             is TakeProductsCommand -> pushToStore(vendingMachine.takeProducts())
+            is PressReturnCoinsButton -> pushToStore(vendingMachine.pressReturnCoinsButton())
         }
 
     //Write
-    fun pressReturnCoinsButton() = pushToStore(vendingMachine.pressReturnCoinsButton())
     fun takeCoins() = pushToStore(vendingMachine.takeCoins())
 
     //Read

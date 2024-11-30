@@ -106,14 +106,14 @@ class VendingMachineTest {
 
     @Test
     fun `When no coins inserted and 'return coins' is pressed, coin chute is empty`() {
-        val actual = Machine().pressReturnCoinsButton()
+        val actual = Machine().execute(PressReturnCoinsButton)
 
         assertThat(actual.coinChute).isEmpty()
     }
 
     @Test
     fun `When two coins inserted and return coins is pressed, coins in coin chute`() {
-        val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO)).execute(InsertCoinCommand(COIN_TWO_EURO)).pressReturnCoinsButton()
+        val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO)).execute(InsertCoinCommand(COIN_TWO_EURO)).execute(PressReturnCoinsButton)
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
     }
@@ -123,7 +123,7 @@ class VendingMachineTest {
     fun `When coins taken from coin chute, coin chute is empty`() {
         val actual = Machine()
             .execute(InsertCoinCommand(COIN_FIFTY_CENT))
-            .pressReturnCoinsButton()            
+            .execute(PressReturnCoinsButton)            
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT)        
         assertThat(actual.takeCoins().coinChute).isEmpty()
@@ -153,7 +153,7 @@ class VendingMachineTest {
     fun `When some coins inserted and rejected, correct number of availableCoins in Machine`() {
         val actual = Machine()
             .execute(InsertCoinCommand(COIN_TWO_EURO))
-            .pressReturnCoinsButton()
+            .execute(PressReturnCoinsButton)
             .execute(InsertCoinCommand(invalidCoin))
             .execute(InsertCoinCommand(COIN_TWO_EURO))
 
@@ -164,7 +164,7 @@ class VendingMachineTest {
     @Test
     fun `When scenario with all actions happens, machine still works`() {
         val actual = Machine().execute(InsertCoinCommand(COIN_TWO_EURO))
-            .pressReturnCoinsButton()
+            .execute(PressReturnCoinsButton)
             .execute(InsertCoinCommand(COIN_TWO_EURO))
             .execute(InsertCoinCommand(invalidCoin))
             .execute(PressButtonCommand(CANDY.code))
@@ -185,7 +185,7 @@ class VendingMachineTest {
             .execute(InsertCoinCommand(COIN_FIFTY_CENT))
             .execute(InsertCoinCommand(COIN_FIFTY_CENT))
             .execute(InsertCoinCommand(COIN_ONE_CENT))
-            .pressReturnCoinsButton()
+            .execute(PressReturnCoinsButton)
 
         assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
         assertThat(actual.coinChute).isEmpty()
