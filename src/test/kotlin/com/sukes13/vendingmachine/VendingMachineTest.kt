@@ -20,6 +20,14 @@ class VendingMachineTest {
 
         assertThat(actual.display()).isEqualTo("0,50")
         assertThat(actual.insert(COIN_TWO_EURO).display()).isEqualTo("2,50")
+    }   
+    
+    @Test
+    fun `When inserting a valid coin, active value is displayed by machine - using command`() {
+        val actual = Machine().execute(InsertCoinCommand(COIN_FIFTY_CENT))
+
+        assertThat(actual.display()).isEqualTo("0,50")
+        assertThat(actual.insert(COIN_TWO_EURO).display()).isEqualTo("2,50")
     }
 
     @Test

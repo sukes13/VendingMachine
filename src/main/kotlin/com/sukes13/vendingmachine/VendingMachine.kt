@@ -12,27 +12,6 @@ import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ProductBoughtEv
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
-data class Machine(
-    val eventStore: EventStore = EventStore()
-) {
-    private val vendingMachine get() = VendingMachine.createFrom(eventStore)
-    private fun copyAndAdd(newEvents: List<VendingEvent>) = copy(eventStore = eventStore.publish(newEvents))
-
-    //Write
-    fun insert(coin: Coin) = copyAndAdd(vendingMachine.insert(coin))
-    fun pressButton(productName: String) = copyAndAdd(vendingMachine.pressButton(productName))
-    fun takeProducts()= copyAndAdd(vendingMachine.takeProducts())
-    fun pressReturnCoinsButton() = copyAndAdd(vendingMachine.pressReturnCoinsButton())
-    fun takeCoins() = copyAndAdd(vendingMachine.takeCoins())
-
-    //Read
-    fun display() = vendingMachine.display()
-    val chute get() = vendingMachine.chute
-    val coinChute get() = vendingMachine.coinChute
-    val activeAmount get() = vendingMachine.activeAmount
-}
-
-
 data class VendingMachine private constructor(
     val activeAmount: Double = 0.0,
     val chute: List<Product> = emptyList(),
