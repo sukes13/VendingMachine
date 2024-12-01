@@ -18,9 +18,8 @@ data class Machine(
     fun handle(query: MachineQuery) =
         when (query) {
             is CheckDisplay -> vendingMachine.display()
+            is CheckChute -> vendingMachine.chute
+            is CheckCoinChute -> vendingMachine.coinChute
+            is CheckActiveAmount -> vendingMachine.activeAmount
         }
-
-    val chute get() = vendingMachine.chute
-    val coinChute get() = vendingMachine.coinChute
-    val activeAmount get() = vendingMachine.activeAmount
 }

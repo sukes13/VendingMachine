@@ -13,7 +13,7 @@ import java.util.stream.Stream
 
 class VendingMachineTest {
     private val invalidCoin = Coin(name = "invalid", diameter = 2.00, mass = 99.0, thickness = 66.0)
-    
+
     @Test
     fun `When inserting a valid coin, active value is displayed by machine`() {
         val actual = Machine().execute(InsertCoin(COIN_FIFTY_CENT))
@@ -26,8 +26,8 @@ class VendingMachineTest {
     fun `When inserting an invalid coin, active value is 0 and coin is returned`() {
         val actual = Machine().execute(InsertCoin(invalidCoin))
 
-        assertThat(actual.coinChute).containsExactly(invalidCoin)
-        assertThat(actual.activeAmount).isEqualTo(0.0)
+        assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactly(invalidCoin)
+        assertThat(actual.handle(CheckActiveAmount)).isEqualTo(0.0)
         assertThat(actual.handle(CheckDisplay)).isEqualTo("INSERT COIN")
     }
 
@@ -41,16 +41,16 @@ class VendingMachineTest {
             .fold(Machine()) { acc, coin -> acc.execute(InsertCoin(coin)) }
             .execute(ChooseProduct(product.code))
 
-        assertThat(actual.chute).containsExactly(product)
-        assertThat(actual.activeAmount).isEqualTo(0.0)
+        assertThat(actual.handle(CheckChute) as List<*>).containsExactly(product)
+        assertThat(actual.handle(CheckActiveAmount)).isEqualTo(0.0)
     }
 
     @Test
     fun `When button pressed with no money inserted, chute stays empty, display shows price`() {
         val actual = Machine().execute(ChooseProduct("Cola"))
 
-        assertThat(actual.chute).isEmpty()
-        assertThat(actual.activeAmount).isEqualTo(0.0)
+        assertThat(actual.handle(CheckChute) as List<*>).isEmpty()
+        assertThat(actual.handle(CheckActiveAmount)).isEqualTo(0.0)
         assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1,00")
     }
 
@@ -91,8 +91,8 @@ class VendingMachineTest {
         val actual = Machine().execute(InsertCoin(COIN_TWO_EURO))
             .execute(ChooseProduct(CANDY.code))
 
-        assertThat(actual.chute).containsExactly(CANDY)
-        assertThat(actual.activeAmount).isEqualTo(1.35)
+        assertThat(actual.handle(CheckChute) as List<*>).containsExactly(CANDY)
+        assertThat(actual.handle(CheckActiveAmount)).isEqualTo(1.35)
     }
 
     @Test
@@ -101,21 +101,23 @@ class VendingMachineTest {
             .execute(ChooseProduct(CANDY.code))
             .execute(TakeProducts)
 
-        assertThat(actual.chute).isEmpty()
+        assertThat(actual.handle(CheckChute) as List<*>).isEmpty()
     }
 
     @Test
     fun `When no coins inserted and 'return coins' is pressed, coin chute is empty`() {
         val actual = Machine().execute(ReturnCoins)
 
-        assertThat(actual.coinChute).isEmpty()
+        assertThat(actual.handle(CheckCoinChute) as List<*>).isEmpty()
     }
 
     @Test
     fun `When two coins inserted and return coins is pressed, coins in coin chute`() {
-        val actual = Machine().execute(InsertCoin(COIN_TWO_EURO)).execute(InsertCoin(COIN_TWO_EURO)).execute(ReturnCoins)
+        val actual =            Machine().execute(InsertCoin(COIN_TWO_EURO))
+            .execute(InsertCoin(COIN_TWO_EURO))
+            .execute(ReturnCoins)
 
-        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
+        assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(COIN_TWO_EURO, COIN_TWO_EURO)
     }
 
 
@@ -123,29 +125,35 @@ class VendingMachineTest {
     fun `When coins taken from coin chute, coin chute is empty`() {
         val actual = Machine()
             .execute(InsertCoin(COIN_FIFTY_CENT))
-            .execute(ReturnCoins)            
+            .execute(ReturnCoins)
 
-        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT)        
-        assertThat(actual.execute(TakeCoins).coinChute).isEmpty()
+        assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(COIN_FIFTY_CENT)
+        assertThat(actual.execute(TakeCoins).handle(CheckCoinChute) as List<*>).isEmpty()
     }
 
     @Test
     fun `When COLA-button pressed while showing 'thank you' after a purchase, price of COLA is shown iso 'thank you'`() {
-        val machineAfterPurchase = Machine().execute(InsertCoin(COIN_ONE_EURO)).execute(ChooseProduct(COLA.code))
+        val machineAfterPurchase = Machine().execute(InsertCoin(COIN_ONE_EURO))
+            .execute(ChooseProduct(COLA.code))
         assertThat(machineAfterPurchase.handle(CheckDisplay)).isEqualTo("THANK YOU")
 
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
-            assertThat(machineAfterPurchase.execute(ChooseProduct(COLA.code)).handle(CheckDisplay)).isEqualTo("PRICE 1,00")
+            assertThat(
+                machineAfterPurchase.execute(ChooseProduct(COLA.code)).handle(CheckDisplay)
+            ).isEqualTo("PRICE 1,00")
         }
     }
 
     @Test
     fun `When CANDY-button pressed while showing 'thank you' after a purchase, price of CANDY is shown iso 'thank you'`() {
-        val machineAfterPurchase = Machine().execute(InsertCoin(COIN_ONE_EURO)).execute(ChooseProduct(CANDY.code))
+        val machineAfterPurchase = Machine().execute(InsertCoin(COIN_ONE_EURO))
+            .execute(ChooseProduct(CANDY.code))
         assertThat(machineAfterPurchase.handle(CheckDisplay)).isEqualTo("THANK YOU")
 
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
-            assertThat(machineAfterPurchase.execute(ChooseProduct(CANDY.code)).handle(CheckDisplay)).isEqualTo("PRICE 0,65")
+            assertThat(
+                machineAfterPurchase.execute(ChooseProduct(CANDY.code)).handle(CheckDisplay)
+            ).isEqualTo("PRICE 0,65")
         }
     }
 
@@ -157,8 +165,8 @@ class VendingMachineTest {
             .execute(InsertCoin(invalidCoin))
             .execute(InsertCoin(COIN_TWO_EURO))
 
-        assertThat(actual.activeAmount).isEqualTo(2.0)
-        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_TWO_EURO, invalidCoin)
+        assertThat(actual.handle(CheckActiveAmount)).isEqualTo(2.0)
+        assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(COIN_TWO_EURO, invalidCoin)
     }
 
     @Test
@@ -169,10 +177,10 @@ class VendingMachineTest {
             .execute(InsertCoin(invalidCoin))
             .execute(ChooseProduct(CANDY.code))
 
-        assertThat(actual.chute).containsExactly(CANDY)
+        assertThat(actual.handle(CheckChute) as List<*>).containsExactly(CANDY)
         assertThat(actual.handle(CheckDisplay)).isEqualTo("THANK YOU")
-        assertThat(actual.execute(TakeProducts).chute).isEmpty()
-        assertThat(actual.coinChute).containsExactlyInAnyOrder(
+        assertThat(actual.execute(TakeProducts).handle(CheckChute) as List<*>).isEmpty()
+        assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(
             COIN_TWO_EURO,
             invalidCoin,
         )
@@ -187,8 +195,8 @@ class VendingMachineTest {
             .execute(InsertCoin(COIN_ONE_CENT))
             .execute(ReturnCoins)
 
-        assertThat(actual.coinChute).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
-        assertThat(actual.coinChute).isEmpty()
+        assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
+        assertThat(actual.handle(CheckCoinChute) as List<*>).isEmpty()
     }
 
     companion object {
