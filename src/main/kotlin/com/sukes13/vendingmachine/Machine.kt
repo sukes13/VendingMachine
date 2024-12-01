@@ -15,10 +15,12 @@ data class Machine(
             is TakeCoins -> pushToStore(vendingMachine.takeCoins())
         }
 
-    //Read
-    fun display() = vendingMachine.display()
+    fun handle(query: MachineQuery) =
+        when (query) {
+            is CheckDisplay -> vendingMachine.display()
+        }
+
     val chute get() = vendingMachine.chute
     val coinChute get() = vendingMachine.coinChute
     val activeAmount get() = vendingMachine.activeAmount
-
 }
