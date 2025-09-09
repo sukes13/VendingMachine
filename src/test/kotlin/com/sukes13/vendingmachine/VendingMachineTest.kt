@@ -1,5 +1,7 @@
 package com.sukes13.vendingmachine
 
+import com.sukes13.vendingmachine.MachineCommand.*
+import com.sukes13.vendingmachine.MachineQuery.*
 import com.sukes13.vendingmachine.Product.*
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
