@@ -1,5 +1,8 @@
 package com.sukes13.vendingmachine
 
+import com.sukes13.vendingmachine.MachineCommand.*
+import com.sukes13.vendingmachine.MachineQuery.*
+
 data class Machine(
     val eventStore: EventStore = EventStore()
 ) {

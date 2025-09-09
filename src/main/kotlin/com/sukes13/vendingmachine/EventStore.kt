@@ -12,8 +12,5 @@ data class EventStore(val events: List<VendingEvent> = emptyList()) : List<Vendi
                 events.drop(lastOccurrence + 1)
             else events
         })
-
-    fun lastEventOrNull() = events.lastOrNull()
-
 }
 
