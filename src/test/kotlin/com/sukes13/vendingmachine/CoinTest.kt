@@ -2,6 +2,7 @@ package com.sukes13.vendingmachine
 
 import com.sukes13.vendingmachine.CoinRegistry.value
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -20,6 +21,12 @@ class CoinTest {
     fun `When amount is provided, get it in as least coins as possible`(inputValue: Double, coinResult: List<Coin>) {
         assertThat(CoinRegistry.inCoins(inputValue)).containsExactlyInAnyOrder(*coinResult.toTypedArray())
     }
+
+    @Test
+    fun `When amount is provided, get it in as least available coins as possible`() {
+        assertThat(CoinRegistry.inAvailableCoins(1.0,listOf(COIN_ONE_EURO))).containsExactlyInAnyOrder(COIN_ONE_EURO)
+    }
+
     
     //TODO: Add test + functionality to get amount in as least coins as possible but taking into account list of available coins
 

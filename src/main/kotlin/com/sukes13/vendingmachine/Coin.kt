@@ -1,5 +1,6 @@
 package com.sukes13.vendingmachine
 
+
 val COIN_ONE_CENT = Coin("1 cent", 16.25, 1.67, 2.30)
 val COIN_TWO_CENT = Coin("2 cent", 18.75, 1.67, 3.06)
 val COIN_FIVE_CENT = Coin("5 cent", 21.25, 1.67, 3.92)
@@ -45,4 +46,24 @@ object CoinRegistry {
             coins + highestValueInRemainder.key
         )
     }
+
+    tailrec fun inAvailableCoins(remainder: Double, availableCoins: List<Coin>, coins: List<Coin> = emptyList()): List<Coin> {
+        if (remainder <= 0.0) return coins
+
+        val availableToReturn = highestAvailableCoinOrNull(highestValueInRemainder(remainder).value) ?: return coins
+
+        return inAvailableCoins(
+            remainder = remainder.minusPrecise(availableToReturn.value),
+            availableCoins = availableCoins - availableToReturn.key,
+            coins = coins + availableToReturn.key,
+        )
+    }
+
+    private fun highestAvailableCoinOrNull(coinValue: Double): Map.Entry<Coin, Double>? =
+        registry.filter { it.value <= coinValue }.maxByOrNull { (_, value) -> value }
+
+    private fun highestValueInRemainder(remainder: Double): Map.Entry<Coin, Double> =
+        registry.maxBy { (_, value) ->
+            if ((remainder.minusPrecise(value)) >= 0.0) value else 0.0
+        }
 }
