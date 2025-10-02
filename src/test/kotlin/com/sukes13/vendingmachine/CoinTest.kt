@@ -25,6 +25,7 @@ class CoinTest {
     @Test
     fun `When amount is provided, get it in as least available coins as possible`() {
         assertThat(CoinRegistry.inAvailableCoins(1.0,listOf(COIN_ONE_EURO))).containsExactlyInAnyOrder(COIN_ONE_EURO)
+        assertThat(CoinRegistry.inAvailableCoins(2.2,listOf(COIN_ONE_EURO,COIN_ONE_EURO,COIN_TWENTY_CENT))).containsExactlyInAnyOrder(COIN_ONE_EURO,COIN_ONE_EURO,COIN_TWENTY_CENT)
     }
 
     

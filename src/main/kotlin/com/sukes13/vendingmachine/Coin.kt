@@ -50,7 +50,10 @@ object CoinRegistry {
     tailrec fun inAvailableCoins(remainder: Double, availableCoins: List<Coin>, coins: List<Coin> = emptyList()): List<Coin> {
         if (remainder <= 0.0) return coins
 
-        val availableToReturn = highestAvailableCoinOrNull(highestValueInRemainder(remainder).value) ?: return coins
+        val availableToReturn = highestAvailableCoinOrNull(
+            availableCoins = availableCoins,
+            coinValue = highestValueInRemainder(remainder).value,
+        ) ?: return coins
 
         return inAvailableCoins(
             remainder = remainder.minusPrecise(availableToReturn.value),
@@ -59,8 +62,10 @@ object CoinRegistry {
         )
     }
 
-    private fun highestAvailableCoinOrNull(coinValue: Double): Map.Entry<Coin, Double>? =
-        registry.filter { it.value <= coinValue }.maxByOrNull { (_, value) -> value }
+    private fun highestAvailableCoinOrNull(availableCoins: List<Coin>, coinValue: Double): Map.Entry<Coin, Double>? =
+        availableCoins.map { coin -> registry.entries.single { entry -> entry.key == coin } }
+            .filter { it.value <= coinValue }
+            .maxByOrNull { (_, value) -> value }
 
     private fun highestValueInRemainder(remainder: Double): Map.Entry<Coin, Double> =
         registry.maxBy { (_, value) ->
