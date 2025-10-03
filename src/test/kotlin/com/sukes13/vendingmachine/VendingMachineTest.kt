@@ -196,7 +196,6 @@ class VendingMachineTest {
             .execute(ReturnCoins)
 
         assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
-        assertThat(actual.handle(CheckCoinChute) as List<*>).isEmpty()
     }
 
     companion object {

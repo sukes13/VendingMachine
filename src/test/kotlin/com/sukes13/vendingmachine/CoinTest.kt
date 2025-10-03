@@ -17,30 +17,12 @@ class CoinTest {
     }
 
     @ParameterizedTest
-    @MethodSource("inCoinsInput")
-    fun `When amount is provided, get it in as least coins as possible`(inputValue: Double, coinResult: List<Coin>) {
-        assertThat(CoinRegistry.inCoins(inputValue)).containsExactlyInAnyOrder(*coinResult.toTypedArray())
+    @MethodSource("inAvailableCoinsInput")
+    fun `When amount is provided, get it in as least available coins as possible`(inputValue: Double, availableCoins: List<Coin>, coinResult: List<Coin>) {
+        assertThat(CoinRegistry.inAvailableCoins(remainder = inputValue, availableCoins = availableCoins)).containsExactlyInAnyOrder(*coinResult.toTypedArray())
     }
-
-    @Test
-    fun `When amount is provided, get it in as least available coins as possible`() {
-        assertThat(CoinRegistry.inAvailableCoins(1.0,listOf(COIN_ONE_EURO))).containsExactlyInAnyOrder(COIN_ONE_EURO)
-        assertThat(CoinRegistry.inAvailableCoins(2.2,listOf(COIN_ONE_EURO,COIN_ONE_EURO,COIN_TWENTY_CENT))).containsExactlyInAnyOrder(COIN_ONE_EURO,COIN_ONE_EURO,COIN_TWENTY_CENT)
-    }
-
-    
-    //TODO: Add test + functionality to get amount in as least coins as possible but taking into account list of available coins
 
     companion object {
-        @JvmStatic
-        fun inCoinsInput(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(1.0, listOf(COIN_ONE_EURO)),
-                Arguments.of(1.01, listOf(COIN_ONE_EURO, COIN_ONE_CENT)),
-                Arguments.of(1.11, listOf(COIN_ONE_EURO, COIN_TEN_CENT, COIN_ONE_CENT)),
-                Arguments.of(3.61, listOf(COIN_TWO_EURO, COIN_ONE_EURO, COIN_FIFTY_CENT, COIN_TEN_CENT, COIN_ONE_CENT)),
-            )
-
         @JvmStatic
         fun allValidCoinsTest(): Stream<Arguments> =
             Stream.of(
@@ -52,6 +34,22 @@ class CoinTest {
                 Arguments.of(COIN_FIFTY_CENT, 0.50),
                 Arguments.of(COIN_ONE_EURO, 1.00),
                 Arguments.of(COIN_TWO_EURO, 2.00),
+            )
+
+        @JvmStatic
+        fun inAvailableCoinsInput(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(1.0, listOf(COIN_ONE_EURO), listOf(COIN_ONE_EURO)),
+                Arguments.of(2.2, listOf(COIN_ONE_EURO, COIN_ONE_EURO, COIN_TWENTY_CENT), listOf(COIN_ONE_EURO, COIN_ONE_EURO, COIN_TWENTY_CENT)),
+                Arguments.of(
+                    1.85,
+                    listOf(COIN_TWO_EURO, COIN_ONE_EURO, COIN_ONE_EURO, COIN_FIFTY_CENT, COIN_TWENTY_CENT, COIN_TWENTY_CENT, COIN_TEN_CENT, COIN_FIVE_CENT, COIN_FIVE_CENT, COIN_ONE_CENT),
+                    listOf(COIN_ONE_EURO, COIN_FIFTY_CENT, COIN_TWENTY_CENT, COIN_TEN_CENT, COIN_FIVE_CENT)
+                ),
+
+                Arguments.of(1.0, emptyList<Coin>(), emptyList<Coin>()),
+                Arguments.of(1.0, listOf(COIN_TWO_EURO), emptyList<Coin>()),
+                Arguments.of(1.0, listOf(COIN_FIVE_CENT), emptyList<Coin>()),
             )
 
     }
