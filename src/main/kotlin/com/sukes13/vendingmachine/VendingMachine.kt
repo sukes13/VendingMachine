@@ -15,8 +15,9 @@ import java.time.LocalDateTime.now
 data class VendingMachine private constructor(
     val activeAmount: Double = 0.0,
     val chute: List<Product> = emptyList(),
-    val coinChute : List<Coin> = emptyList(),
-    private val currentTimedEvents : List<TimedVendingEvent> = emptyList(),
+    val coinChute: List<Coin> = emptyList(),
+    private val currentTimedEvents: List<TimedVendingEvent> = emptyList(),
+    val availableCoins: List<Coin>,
 ) {
     fun display() =
         if (currentTimedEvents.isEmpty()) defaultMessage()
@@ -39,7 +40,7 @@ data class VendingMachine private constructor(
         }
 
     fun pressReturnCoinsButton() =
-        CoinRegistry.inCoins(activeAmount)
+        CoinRegistry.inAvailableCoins(remainder = activeAmount, availableCoins = availableCoins)
             .map { CoinReturnedEvent(it) }
             .plus(ActiveAmountDecreasedEvent(activeAmount))
 
@@ -68,11 +69,13 @@ data class VendingMachine private constructor(
         fun createFrom(eventStore: EventStore): VendingMachine {
             val activeAmount  = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
                     eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
+            val availableCoins = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin } -
+                    eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet()
             val chute  = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
             val coinChute  = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin }
             val currentTimedEvents  = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
 
-            return VendingMachine(activeAmount = activeAmount,chute = chute, coinChute = coinChute, currentTimedEvents = currentTimedEvents)
+            return VendingMachine(activeAmount = activeAmount,availableCoins = availableCoins, chute = chute, coinChute = coinChute, currentTimedEvents = currentTimedEvents)
         }
     }
 
