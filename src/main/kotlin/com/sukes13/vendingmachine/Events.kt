@@ -24,5 +24,6 @@ sealed interface VendingEvent {
 
         class ProductBoughtEvent(val product: Product) : TimedVendingEvent()
         class ButtonPressed(val product: Product) : TimedVendingEvent()
+        class InsufficientFunds() : TimedVendingEvent()
     }
 }

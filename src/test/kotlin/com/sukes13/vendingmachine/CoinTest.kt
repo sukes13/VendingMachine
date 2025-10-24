@@ -48,8 +48,9 @@ class CoinTest {
                 ),
 
                 Arguments.of(1.0, emptyList<Coin>(), emptyList<Coin>()),
-                Arguments.of(1.0, listOf(COIN_TWO_EURO), emptyList<Coin>()),
-                Arguments.of(1.0, listOf(COIN_FIVE_CENT), emptyList<Coin>()),
+                Arguments.of(1.0, listOf(COIN_TWO_EURO), null),
+                Arguments.of(1.0, listOf(COIN_FIVE_CENT), null),
+                Arguments.of(1.5, listOf(COIN_ONE_EURO), null),
             )
 
     }

@@ -198,6 +198,15 @@ class VendingMachineTest {
         assertThat(actual.handle(CheckCoinChute) as List<*>).containsExactlyInAnyOrder(COIN_FIFTY_CENT, COIN_FIFTY_CENT, COIN_ONE_CENT)
     }
 
+    @Test
+    fun `When returnCoins button pressed but remainder cannot be returned, show insufficient funds`() {
+        val actual = Machine()
+            .execute(InsertCoin(COIN_ONE_EURO))
+            .execute(ChooseProduct(CANDY.code))
+            .execute(ReturnCoins)
+        assertThat(actual.handle(CheckDisplay)).isEqualTo("INSUFFICIENT COINS")
+    }
+
     companion object {
         @JvmStatic
         fun allProductsBoughtTest(): Stream<Arguments> =
