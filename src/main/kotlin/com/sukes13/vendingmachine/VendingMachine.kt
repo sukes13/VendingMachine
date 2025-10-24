@@ -17,8 +17,8 @@ data class VendingMachine private constructor(
     val activeAmount: Double = 0.0,
     val chute: List<Product> = emptyList(),
     val coinChute: List<Coin> = emptyList(),
-    private val display: VendingMachineDisplay,
     val availableCoins: List<Coin>,
+    private val display: VendingMachineDisplay,
 ) {
     fun showDisplay() = display.showMessage()
 
@@ -57,14 +57,17 @@ data class VendingMachine private constructor(
         fun createFrom(eventStore: EventStore): VendingMachine {
             val activeAmount = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
                     eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
-            val availableCoins = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin } -
-                    eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet()
-            val chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product }
-            val coinChute = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin }
-            val currentTimedEvents = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
-            val display = VendingMachineDisplay(activeAmount, currentTimedEvents)
-
-            return VendingMachine(activeAmount = activeAmount, availableCoins = availableCoins, chute = chute, coinChute = coinChute, display = display)
+            return VendingMachine(
+                activeAmount = activeAmount,
+                availableCoins = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin } -
+                        eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet(),
+                chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product },
+                coinChute = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin },
+                display = VendingMachineDisplay(
+                    activeAmount = activeAmount,
+                    currentTimedEvents = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
+                )
+            )
         }
     }
 
