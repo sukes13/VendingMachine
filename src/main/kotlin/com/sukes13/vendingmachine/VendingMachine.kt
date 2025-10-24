@@ -8,6 +8,7 @@ import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountInc
 import com.sukes13.vendingmachine.VendingEvent.CoinEvent.CoinAddedEvent
 import com.sukes13.vendingmachine.VendingEvent.CoinEvent.CoinReturnedEvent
 import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ButtonPressed
+import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.InsufficientFunds
 import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ProductBoughtEvent
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
@@ -41,8 +42,9 @@ data class VendingMachine private constructor(
 
     fun pressReturnCoinsButton() =
         CoinRegistry.inAvailableCoins(remainder = activeAmount, availableCoins = availableCoins)
-            .map { CoinReturnedEvent(it) }
-            .plus(ActiveAmountDecreasedEvent(activeAmount))
+            ?.map { CoinReturnedEvent(it) }
+            ?.plus(ActiveAmountDecreasedEvent(activeAmount))
+            ?: listOf(InsufficientFunds())
 
     fun takeProducts() = listOf(ProductsTakenEvent())
     fun takeCoins() = listOf(CoinsTakenEvent())
@@ -57,6 +59,7 @@ data class VendingMachine private constructor(
         when (event) {
             is ButtonPressed -> "PRICE ${event.product.price().asString()}"
             is ProductBoughtEvent -> "THANK YOU"
+            is InsufficientFunds -> "INSUFFICIENT COINS"
         }
 
     private fun defaultMessage() =

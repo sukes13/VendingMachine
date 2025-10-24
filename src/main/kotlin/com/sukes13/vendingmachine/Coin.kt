@@ -34,13 +34,12 @@ object CoinRegistry {
 
     fun Coin.value() = registry[this]
 
-    tailrec fun inAvailableCoins(remainder: Double, availableCoins: List<Coin>, coins: List<Coin> = emptyList()): List<Coin> {
+    tailrec fun inAvailableCoins(remainder: Double, availableCoins: List<Coin>, coins: List<Coin> = emptyList()): List<Coin>? {
         if (remainder <= 0.0) return coins
 
-        val availableToReturn = highestAvailableCoinOrNull(
-            availableCoins = availableCoins,
-            coinValue = highestCoinValueInRemainder(remainder).value,
-        ) ?: return coinsMatchingFullRemainderOrEmpty(coins, remainder)
+        val availableToReturn = highestCoinValueInRemainder(remainder)
+            .findHighestMatchingAvailableCoinOrNullIn(availableCoins = availableCoins)
+            ?: return coinsMatchingFullRemainderOrNull(coins, remainder)
 
         return inAvailableCoins(
             remainder = remainder.minusPrecise(availableToReturn.value),
@@ -49,18 +48,18 @@ object CoinRegistry {
         )
     }
 
-    private fun coinsMatchingFullRemainderOrEmpty(coins: List<Coin>, remainder: Double): List<Coin> {
+    private fun coinsMatchingFullRemainderOrNull(coins: List<Coin>, remainder: Double): List<Coin>? {
         val coinsTotalValue = coins.mapNotNull { it.value() }.sumOf { it }
-        return if (coinsTotalValue == remainder) coins else emptyList()
+        return if (coinsTotalValue == remainder) coins else null
     }
 
-    private fun highestAvailableCoinOrNull(availableCoins: List<Coin>, coinValue: Double): Map.Entry<Coin, Double>? =
-        availableCoins.map { coin -> registry.entries.single { entry -> entry.key == coin } }
-            .filter { it.value <= coinValue }
+    private fun Double.findHighestMatchingAvailableCoinOrNullIn(availableCoins: List<Coin>): Map.Entry<Coin, Double>? =
+        availableCoins.map { coin -> registry.entries.single { it.key == coin } }
+            .filter { it.value <= this }
             .maxByOrNull { (_, value) -> value }
 
-    private fun highestCoinValueInRemainder(remainder: Double): Map.Entry<Coin, Double> =
-        registry.maxBy { (_, value) ->
-            if ((remainder.minusPrecise(value)) >= 0.0) value else 0.0
+    private fun highestCoinValueInRemainder(remainder: Double) =
+        registry.values.maxBy {
+            if ((remainder.minusPrecise(it)) >= 0.0) it else 0.0
         }
 }
