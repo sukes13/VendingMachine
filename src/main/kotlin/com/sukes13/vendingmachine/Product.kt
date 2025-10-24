@@ -9,7 +9,7 @@ enum class Product(val code: String) {
     CANDY("Candy");
 
     companion object {
-        fun toProduct(code: String) = values().single { it.code == code }
+        fun String.toProduct() = Product.entries.single { it.code == this }
     }
 }
 

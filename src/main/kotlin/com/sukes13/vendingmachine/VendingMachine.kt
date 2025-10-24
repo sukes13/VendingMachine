@@ -1,6 +1,7 @@
 package com.sukes13.vendingmachine
 
 import com.sukes13.vendingmachine.CoinRegistry.value
+import com.sukes13.vendingmachine.Product.Companion.toProduct
 import com.sukes13.vendingmachine.ProductRegistry.price
 import com.sukes13.vendingmachine.VendingEvent.*
 import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountDecreasedEvent
@@ -31,7 +32,7 @@ data class VendingMachine private constructor(
         } ?: listOf(CoinReturnedEvent(coin))
 
     fun pressButton(productCode: String) =
-        Product.toProduct(productCode).let { product ->
+        productCode.toProduct().let { product ->
             when {
                 activeAmount >= product.price() -> buyProductAndCharge(product)
                 else -> listOf(ButtonPressed(product))
