@@ -41,8 +41,10 @@ data class VendingMachine private constructor(
 
     fun pressReturnCoinsButton() =
         CoinRegistry.inAvailableCoins(remainder = activeAmount, availableCoins = availableCoins)
-            ?.map { CoinReturnedEvent(it) }
-            ?.plus(ActiveAmountDecreasedEvent(activeAmount))
+            ?.flatMap {  listOf(
+                CoinReturnedEvent(it),
+                ActiveAmountDecreasedEvent(activeAmount)
+            )}
             ?: listOf(InsufficientFunds())
 
     fun takeProducts() = listOf(ProductsTakenEvent())
