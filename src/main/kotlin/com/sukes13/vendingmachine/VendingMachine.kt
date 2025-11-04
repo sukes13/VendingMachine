@@ -31,30 +31,26 @@ data class VendingMachine private constructor(
             )
         } ?: listOf(CoinReturnedEvent(coin))
 
-    fun pressButton(productCode: String) =
+    fun pressProductButton(productCode: String) =
         productCode.toProduct().let { product ->
             when {
-                activeAmount >= product.price() -> buyProductAndCharge(product)
+                activeAmount >= product.price() -> listOf(
+                    ActiveAmountDecreasedEvent(value = product.price()),
+                    ProductBoughtEvent(product)
+                )
+
                 else -> listOf(ProductButtonPressedWhileInsufficientFunds(product))
             }
         }
 
     fun pressReturnCoinsButton() =
         CoinRegistry.inAvailableCoins(remainder = activeAmount, availableCoins = availableCoins)
-            ?.flatMap {  listOf(
-                CoinReturnedEvent(it),
-                ActiveAmountDecreasedEvent(activeAmount)
-            )}
+            ?.map { CoinReturnedEvent(it) }
+            ?.plus(ActiveAmountDecreasedEvent(activeAmount))
             ?: listOf(InsufficientFunds())
 
     fun takeProducts() = listOf(ProductsTakenEvent())
     fun takeCoins() = listOf(CoinsTakenEvent())
-
-    private fun buyProductAndCharge(product: Product) =
-        listOf(
-            ActiveAmountDecreasedEvent(value = product.price()),
-            ProductBoughtEvent(product)
-        )
 
     companion object {
         fun createFrom(eventStore: EventStore) = VendingMachine(
