@@ -21,7 +21,7 @@ data class VendingMachine private constructor(
     val availableCoins: List<Coin>,
     private val display: VendingMachineDisplay,
 ) {
-    fun showDisplay() = display.showMessage()
+    fun showDisplay() = display.showMessage(activeAmount)
 
     fun insert(coin: Coin) =
         coin.value()?.let {
@@ -67,7 +67,6 @@ data class VendingMachine private constructor(
                 chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product },
                 coinChute = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin },
                 display = VendingMachineDisplay(
-                    activeAmount = activeAmount,
                     currentTimedEvents = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
                 )
             )
@@ -77,9 +76,9 @@ data class VendingMachine private constructor(
 
 }
 
-class VendingMachineDisplay(val activeAmount: Double, val currentTimedEvents: List<TimedVendingEvent>) {
-    fun showMessage() =
-        if (currentTimedEvents.isEmpty()) defaultMessage()
+class VendingMachineDisplay(val currentTimedEvents: List<TimedVendingEvent>) {
+    fun showMessage(activeAmount : Double) =
+        if (currentTimedEvents.isEmpty()) defaultMessage(activeAmount)
         else temporaryMessage(currentTimedEvents.maxBy { it.occurredOn })
 
     private fun temporaryMessage(event: TimedVendingEvent) =
@@ -89,7 +88,7 @@ class VendingMachineDisplay(val activeAmount: Double, val currentTimedEvents: Li
             is InsufficientFunds -> "INSUFFICIENT COINS"
         }
 
-    private fun defaultMessage() =
+    private fun defaultMessage(activeAmount: Double) =
         when (activeAmount) {
             0.0 -> "INSERT COIN"
             else -> activeAmount.asString()
