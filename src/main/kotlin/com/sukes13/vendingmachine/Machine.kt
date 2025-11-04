@@ -12,7 +12,7 @@ data class Machine(
     fun execute(command: MachineCommand): Machine =
         when (command) {
             is InsertCoin -> publishToEventStore(vendingMachine.insert(command.coin))
-            is ChooseProduct -> publishToEventStore(vendingMachine.pressButton(command.productCode))
+            is ChooseProduct -> publishToEventStore(vendingMachine.pressProductButton(command.productCode))
             is TakeProducts -> publishToEventStore(vendingMachine.takeProducts())
             is ReturnCoins -> publishToEventStore(vendingMachine.pressReturnCoinsButton())
             is TakeCoins -> publishToEventStore(vendingMachine.takeCoins())
