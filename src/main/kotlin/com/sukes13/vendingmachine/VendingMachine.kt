@@ -33,14 +33,11 @@ data class VendingMachine private constructor(
 
     fun pressProductButton(productCode: String) =
         productCode.toProduct().let { product ->
-            when {
-                activeAmount >= product.price() -> listOf(
-                    ActiveAmountDecreasedEvent(value = product.price()),
-                    ProductBoughtEvent(product)
-                )
-
-                else -> listOf(ProductButtonPressedWhileInsufficientFunds(product))
-            }
+            if (activeAmount >= product.price()) listOf(
+                ActiveAmountDecreasedEvent(value = product.price()),
+                ProductBoughtEvent(product)
+            )
+            else listOf(ProductButtonPressedWhileInsufficientFunds(product))
         }
 
     fun pressReturnCoinsButton() =
