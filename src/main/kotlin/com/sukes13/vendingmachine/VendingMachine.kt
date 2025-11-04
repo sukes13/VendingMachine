@@ -57,44 +57,20 @@ data class VendingMachine private constructor(
         )
 
     companion object {
-        fun createFrom(eventStore: EventStore): VendingMachine {
-            val activeAmount = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
-                    eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value }
-            return VendingMachine(
-                activeAmount = activeAmount,
-                availableCoins = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin } -
-                        eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet(),
-                chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product },
-                coinChute = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin },
-                display = VendingMachineDisplay(
-                    currentTimedEvents = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
-                )
+        fun createFrom(eventStore: EventStore) = VendingMachine(
+            activeAmount = eventStore.eventsOfType<ActiveAmountIncreasedEvent>().sumOf { it.value } -
+                    eventStore.eventsOfType<ActiveAmountDecreasedEvent>().sumOf { it.value },
+            availableCoins = eventStore.eventsOfType<CoinAddedEvent>().map { it.coin } -
+                    eventStore.eventsOfType<CoinReturnedEvent>().map { it.coin }.toSet(),
+            chute = eventStore.eventsSinceLast<ProductsTakenEvent>().eventsOfType<ProductBoughtEvent>().map { it.product },
+            coinChute = eventStore.eventsSinceLast<CoinsTakenEvent>().eventsOfType<CoinReturnedEvent>().map { it.coin },
+            display = VendingMachineDisplay(
+                currentTimedEvents = eventStore.eventsOfType<TimedVendingEvent>().filter { it.occurredOn.withinTimeFrame() }
             )
-        }
+        )
     }
-
-
 }
 
-class VendingMachineDisplay(val currentTimedEvents: List<TimedVendingEvent>) {
-    fun showMessage(activeAmount : Double) =
-        if (currentTimedEvents.isEmpty()) defaultMessage(activeAmount)
-        else temporaryMessage(currentTimedEvents.maxBy { it.occurredOn })
-
-    private fun temporaryMessage(event: TimedVendingEvent) =
-        when (event) {
-            is ButtonPressed -> "PRICE ${event.product.price().asString()}"
-            is ProductBoughtEvent -> "THANK YOU"
-            is InsufficientFunds -> "INSUFFICIENT COINS"
-        }
-
-    private fun defaultMessage(activeAmount: Double) =
-        when (activeAmount) {
-            0.0 -> "INSERT COIN"
-            else -> activeAmount.asString()
-        }
-}
-
-private fun Double.asString() = String.format("%.2f", this)
+internal fun Double.asString() = String.format("%.2f", this)
 internal fun Double.minusPrecise(second: Double) = (toBigDecimal() - second.toBigDecimal()).toDouble()
 private fun LocalDateTime.withinTimeFrame() = isAfter(now().minusSeconds(1))
