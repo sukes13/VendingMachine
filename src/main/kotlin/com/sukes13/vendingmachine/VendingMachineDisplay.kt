@@ -9,7 +9,7 @@ class VendingMachineDisplay(val currentTimedEvents: List<VendingEvent.TimedVendi
 
     private fun temporaryMessage(event: VendingEvent.TimedVendingEvent) =
         when (event) {
-            is VendingEvent.TimedVendingEvent.ButtonPressed -> "PRICE ${event.product.price().asString()}"
+            is VendingEvent.TimedVendingEvent.ProductButtonPressedWhileInsufficientFunds -> "PRICE ${event.product.price().asString()}"
             is VendingEvent.TimedVendingEvent.ProductBoughtEvent -> "THANK YOU"
             is VendingEvent.TimedVendingEvent.InsufficientFunds -> "INSUFFICIENT COINS"
         }

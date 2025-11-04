@@ -23,7 +23,7 @@ sealed interface VendingEvent {
         val occurredOn: LocalDateTime = now()
 
         class ProductBoughtEvent(val product: Product) : TimedVendingEvent()
-        class ButtonPressed(val product: Product) : TimedVendingEvent()
+        class ProductButtonPressedWhileInsufficientFunds(val product: Product) : TimedVendingEvent()
         class InsufficientFunds() : TimedVendingEvent()
     }
 }

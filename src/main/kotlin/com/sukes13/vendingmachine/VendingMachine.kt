@@ -8,7 +8,7 @@ import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountDec
 import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountIncreasedEvent
 import com.sukes13.vendingmachine.VendingEvent.CoinEvent.CoinAddedEvent
 import com.sukes13.vendingmachine.VendingEvent.CoinEvent.CoinReturnedEvent
-import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ButtonPressed
+import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ProductButtonPressedWhileInsufficientFunds
 import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.InsufficientFunds
 import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ProductBoughtEvent
 import java.time.LocalDateTime
@@ -35,7 +35,7 @@ data class VendingMachine private constructor(
         productCode.toProduct().let { product ->
             when {
                 activeAmount >= product.price() -> buyProductAndCharge(product)
-                else -> listOf(ButtonPressed(product))
+                else -> listOf(ProductButtonPressedWhileInsufficientFunds(product))
             }
         }
 
