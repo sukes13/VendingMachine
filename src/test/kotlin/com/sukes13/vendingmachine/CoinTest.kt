@@ -18,8 +18,11 @@ class CoinTest {
 
     @ParameterizedTest
     @MethodSource("inAvailableCoinsInput")
-    fun `When amount is provided, get it in as least available coins as possible`(inputValue: Double, availableCoins: List<Coin>, coinResult: List<Coin>) {
-        assertThat(CoinRegistry.inAvailableCoins(remainder = inputValue, availableCoins = availableCoins)).containsExactlyInAnyOrder(*coinResult.toTypedArray())
+    fun `When amount is provided, get it in as least available coins as possible`(inputValue: Double, availableCoins: List<Coin>, coinResult: List<Coin>?) {
+        val actual = CoinRegistry.inAvailableCoins(remainder = inputValue, availableCoins = availableCoins)
+        coinResult?.let {
+            assertThat(actual).containsExactlyInAnyOrder(*it.toTypedArray())
+        } ?: assertThat(actual).isNull()
     }
 
     companion object {
@@ -47,7 +50,7 @@ class CoinTest {
                     listOf(COIN_ONE_EURO, COIN_FIFTY_CENT, COIN_TWENTY_CENT, COIN_TEN_CENT, COIN_FIVE_CENT)
                 ),
 
-                Arguments.of(1.0, emptyList<Coin>(), emptyList<Coin>()),
+                Arguments.of(1.0, emptyList<Coin>(), null),
                 Arguments.of(1.0, listOf(COIN_TWO_EURO), null),
                 Arguments.of(1.0, listOf(COIN_FIVE_CENT), null),
                 Arguments.of(1.5, listOf(COIN_ONE_EURO), null),
