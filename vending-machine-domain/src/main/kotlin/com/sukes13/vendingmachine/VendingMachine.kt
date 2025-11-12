@@ -1,6 +1,5 @@
 package com.sukes13.vendingmachine
 
-import com.sukes13.vendingmachine.CoinRegistry.value
 import com.sukes13.vendingmachine.Product.Companion.toProduct
 import com.sukes13.vendingmachine.ProductRegistry.price
 import com.sukes13.vendingmachine.VendingEvent.*
@@ -8,9 +7,8 @@ import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountDec
 import com.sukes13.vendingmachine.VendingEvent.ActiveAmountEvent.ActiveAmountIncreasedEvent
 import com.sukes13.vendingmachine.VendingEvent.CoinEvent.CoinAddedEvent
 import com.sukes13.vendingmachine.VendingEvent.CoinEvent.CoinReturnedEvent
-import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ProductButtonPressedWhileInsufficientFunds
-import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.InsufficientFunds
-import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.ProductBoughtEvent
+import com.sukes13.vendingmachine.VendingEvent.TimedVendingEvent.*
+import com.sukes13.vendingmachine.CoinRegistry.value
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
