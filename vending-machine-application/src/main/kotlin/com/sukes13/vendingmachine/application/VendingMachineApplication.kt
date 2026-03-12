@@ -1,10 +1,12 @@
 package com.sukes13.vendingmachine.application
 
-@SpringBootApplication(scanBasePackages = ["be.fgov.sfpd.hedwig.no.component.scan"])
-@Import(
-)
-class VendingMachineApplication : SpringBootServletInitializer()
+//import org.springframework.boot.autoconfigure.SpringBootApplication
+//import kotlin.jvm.java
+//
+//@SpringBootApplication(scanBasePackages = ["be.fgov.sfpd.hedwig.no.component.scan"])
+//@Import()
+class VendingMachineApplication /*: SpringBootServletInitializer()*/
 
 fun main(args: Array<String>) {
-    SpringApplication.run(HedwigApp::class.java, *args)
+//    SpringApplication.run(VendingMachineApplication::class.java, *args)
 }

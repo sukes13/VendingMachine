@@ -1,5 +1,4 @@
-package com.sukes13.vendingmachine.rest
-
+package com.sukes13.vendingmachine.application
 
 class MachineControllerTest {
 

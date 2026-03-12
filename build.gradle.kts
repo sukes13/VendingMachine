@@ -5,7 +5,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.example"
+    group = "com.sukes13.vendingmachine"
     version = "0.0.1-SNAPSHOT"
 
     repositories {
@@ -13,30 +13,17 @@ allprojects {
     }
 }
 
-subprojects {
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-    apply(plugin = "io.spring.dependency-management")
-
-    extensions.configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
-        imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:3.3.5")
-        }
-    }
-
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-            freeCompilerArgs.set(listOf("-Xjsr305=strict"))
-        }
-    }
-
-    tasks.withType<Test> {
-        useJUnitPlatform()
-    }
-
-    dependencies {
-        "testImplementation"("org.junit.jupiter:junit-jupiter")
-        "testImplementation"("org.assertj:assertj-core")
-        "testImplementation"("org.awaitility:awaitility")
-    }
-}
+//subprojects {
+//    apply(plugin = "org.jetbrains.kotlin.jvm")
+//
+//    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+//        compilerOptions {
+//            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+//            freeCompilerArgs.set(listOf("-Xjsr305=strict"))
+//        }
+//    }
+//
+//    tasks.withType<Test> {
+//        useJUnitPlatform()
+//    }
+//}
