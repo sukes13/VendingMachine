@@ -25,3 +25,9 @@ hs_err_pid*
 /.idea
 /target/
 /codekata.iml
+/.gradle/
+/build/
+
+/vending-machine-application/build/
+/vending-machine-domain/build/
+/vending-machine-rest/build/

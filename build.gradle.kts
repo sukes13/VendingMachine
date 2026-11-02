@@ -1,7 +1,8 @@
 plugins {
-    kotlin("jvm") version "2.0.21" apply false
-    id("org.springframework.boot") version "3.3.5" apply false
-    id("io.spring.dependency-management") version "1.1.7" apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.spring) apply false
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management) apply false
 }
 
 allprojects {
@@ -13,17 +14,18 @@ allprojects {
     }
 }
 
-//subprojects {
-//    apply(plugin = "org.jetbrains.kotlin.jvm")
-//
-//    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-//        compilerOptions {
-//            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-//            freeCompilerArgs.set(listOf("-Xjsr305=strict"))
-//        }
-//    }
-//
-//    tasks.withType<Test> {
-//        useJUnitPlatform()
-//    }
-//}
+// Only what every module shares: Kotlin setup and JUnit platform. No libraries here.
+subprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+        jvmToolchain(17)
+        compilerOptions {
+            freeCompilerArgs.add("-Xjsr305=strict")
+        }
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+    }
+}

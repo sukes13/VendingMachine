@@ -19,8 +19,8 @@ class VendingMachineTest {
     fun `When inserting a valid coin, active value is displayed by machine`() {
         val actual = Machine().execute(InsertCoin(COIN_FIFTY_CENT))
 
-        assertThat(actual.handle(CheckDisplay)).isEqualTo("0,50")
-        assertThat(actual.execute(InsertCoin(COIN_TWO_EURO)).handle(CheckDisplay)).isEqualTo("2,50")
+        assertThat(actual.handle(CheckDisplay)).isEqualTo("0.50")
+        assertThat(actual.execute(InsertCoin(COIN_TWO_EURO)).handle(CheckDisplay)).isEqualTo("2.50")
     }
 
     @Test
@@ -52,7 +52,7 @@ class VendingMachineTest {
 
         assertThat(actual.handle(CheckChute) as List<*>).isEmpty()
         assertThat(actual.handle(CheckActiveAmount)).isEqualTo(0.0)
-        assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1,00")
+        assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1.00")
     }
 
     @Test
@@ -70,7 +70,7 @@ class VendingMachineTest {
     fun `When button pressed with no money inserted, display shows PRICE but changes to INSERT COIN after 3 seconds`() {
         val actual = Machine().execute(ChooseProduct("Cola"))
 
-        assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1,00")
+        assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1.00")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
             assertThat(actual.handle(CheckDisplay)).isEqualTo("INSERT COIN")
         }
@@ -81,9 +81,9 @@ class VendingMachineTest {
         val actual = Machine().execute(InsertCoin(COIN_FIFTY_CENT))
             .execute(ChooseProduct("Cola"))
 
-        assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1,00")
+        assertThat(actual.handle(CheckDisplay)).isEqualTo("PRICE 1.00")
         await().atMost(Duration.ofMillis(3501)).untilAsserted {
-            assertThat(actual.handle(CheckDisplay)).isEqualTo("0,50")
+            assertThat(actual.handle(CheckDisplay)).isEqualTo("0.50")
         }
     }
 
@@ -141,7 +141,7 @@ class VendingMachineTest {
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
             assertThat(
                 machineAfterPurchase.execute(ChooseProduct(COLA.code)).handle(CheckDisplay)
-            ).isEqualTo("PRICE 1,00")
+            ).isEqualTo("PRICE 1.00")
         }
     }
 
@@ -154,7 +154,7 @@ class VendingMachineTest {
         await().timeout(Duration.ofSeconds(1)).untilAsserted {
             assertThat(
                 machineAfterPurchase.execute(ChooseProduct(CANDY.code)).handle(CheckDisplay)
-            ).isEqualTo("PRICE 0,65")
+            ).isEqualTo("PRICE 0.65")
         }
     }
 
